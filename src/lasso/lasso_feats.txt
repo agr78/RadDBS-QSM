@@ -1,10 +1,1 @@
-Lasso selected features from model trained on 2023-04-05 17:10:56.229832
-original_shape_Elongation
-original_glszm_SizeZoneNonUniformityNormalized
-logarithm_glszm_LargeAreaLowGrayLevelEmphasis
-square_glcm_Correlation
-square_glszm_SizeZoneNonUniformity
-wavelet-LHH_glcm_Correlation
-wavelet-LHH_glszm_SmallAreaLowGrayLevelEmphasis
-wavelet-HLH_firstorder_Skewness
-wavelet-LLL_gldm_SmallDependenceLowGrayLevelEmphasis
+Lasso selected features from model trained on 2023-04-18 10:00:16.793910

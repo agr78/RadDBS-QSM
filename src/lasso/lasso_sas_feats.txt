@@ -1,19 +1,8 @@
-Lasso selected features from model trained on 2023-04-05 17:44:40.841926
-original_firstorder_Skewness
-original_glszm_SmallAreaEmphasis
+Lasso selected features from model trained on 2023-04-11 14:20:37.184226
 lbp-3D-k_firstorder_Minimum
-lbp-3D-k_glszm_HighGrayLevelZoneEmphasis
-lbp-3D-k_glszm_LowGrayLevelZoneEmphasis
-logarithm_glszm_SizeZoneNonUniformityNormalized
-square_glcm_ClusterProminence
-square_glszm_SmallAreaHighGrayLevelEmphasis
-wavelet-LLH_glcm_Idmn
 wavelet-LLH_gldm_SmallDependenceLowGrayLevelEmphasis
-wavelet-LHH_glszm_GrayLevelVariance
 wavelet-LHH_glszm_HighGrayLevelZoneEmphasis
-wavelet-HLL_glrlm_ShortRunLowGrayLevelEmphasis
 wavelet-HLL_glszm_GrayLevelNonUniformityNormalized
-wavelet-HLL_glszm_SizeZoneNonUniformityNormalized
 wavelet-HLH_glszm_SmallAreaLowGrayLevelEmphasis
 wavelet-HHL_glszm_SmallAreaEmphasis
 wavelet-HHH_gldm_LowGrayLevelEmphasis

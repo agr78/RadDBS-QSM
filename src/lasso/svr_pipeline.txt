@@ -1,0 +1,42 @@
+if retrain == 1:
+    #fig,ax = plt.subplots(1,1)
+    for j in np.arange(1,np.max(subject_id)):
+        if j in subject_id:
+            # Remove the test case
+            jj = int(np.where(subject_id==j)[0])
+            X_j = np.delete(X_t,jj,0)
+            per_change_train_j = np.delete(per_change_train,jj,0)
+            # Debug
+            print('Excluding subject',str(subject_id[jj]),'at index',jj,'in target vector','from training feature vector of shape',str(X_t.shape),'by deleting row',str(jj),'to create new training feature vector of shape',str(X_j.shape))
+            if (sum(sum(np.isnan(X))))>0:
+                print('NaN detected in feature vector')
+
+            # Cross-validation for model selection
+            cv = KFold(X_j.shape[0]-2)
+            # Identify most important features
+            # Do not assume data is centered,fit_intercept=True
+            alphas = ((1e-6,1e-5,1e-4,1e-3,1e-2,1e-1,1e0,1e1,1e2))
+            clf_in = ElasticNetCV(fit_intercept=False,max_iter=10000).fit(X_j,np.ravel(per_change_train_j))
+            # sfm = SelectFromModel(clf_in,max_features=100)
+      
+            # Initialize pipeline
+            # clf = Pipeline([('SFM',sfm),('SVR',SVR(C=0,epsilon=0,kernel='rbf'))],verbose=1)
+            # # Select the optimal SVR parameters with grid search
+            # Cs = ((1e-3,1e-2,1e-1,1,1e1))
+            # epsilons = ((0.25,0.5,0.75))
+            
+            # clf_nsvr = GridSearchCV(clf,{'SFM__estimator__alpha':alphas,'SVR__C':Cs,'SVR__epsilon':epsilons},n_jobs=-1,cv=cv,scoring=scorer_,error_score=0.0,verbose=1)
+            # clf_nsvr.fit(X_j,np.ravel(per_change_train_j))
+            # X_jt = clf_nsvr.best_estimator_.steps[0][1]._transform(X_j)
+            # print('Training matrix shape after feature selection is',X_jt.shape)
+            # #ax.imshow(X_jt)
+            # #plt.show()
+            # # Why is predict and best estimator giving the same?
+            # ut[jj] = clf_nsvr.best_estimator_.predict(X_t[jj,:].reshape(1,-1))
+            print(clf_in.alpha_)
+            ut[jj] = clf_in.predict(X_t[jj,:].reshape(1,-1))
+            print('Predicted percentage change of',ut[jj],'for case',subject_id[jj])
+            print('True percentage change',per_change_train[jj])
+            # sfm_alphas[jj] = clf_nsvr.best_estimator_.steps[0][1].estimator.alpha
+            # svr_cs[jj] = clf_nsvr.best_estimator_.steps[1][1].C
+            # svr_epsilons[jj] = clf_nsvr.best_estimator_.steps[1][1].epsilon

@@ -8,6 +8,10 @@ import multiprocessing
 from multiprocess import Pool
 import time
 from joblib import Parallel, delayed
+import pandas as pd
+import os
+
+
 
 # Dark mode
 plt.style.use('dark_background')
@@ -44,7 +48,7 @@ class IndexTracker(object):
         self.ax.set_xticks([])
         self.ax.set_yticks([])
 
-fig, ax = plt.subplots(1,1)
+#fig, ax = plt.subplots(1,1)
 
 
 # Parallelize feature extraction loop  
@@ -66,3 +70,84 @@ def par_feat_extract(extractor,n_cases,qsms,segs,voxel_sizes):
     Phi = []
     Phi_i = Parallel(n_jobs=-1,verbose=100)(delayed(feat_extract(extractor,n_cases,qsms[i],segs[i],voxel_sizes[i],i)) for i in range(n_cases))
     Phi.append(Phi_i)
+
+
+def exclude_outliers(x):
+    q3 = np.percentile(x,75)
+    q1 = np.percentile(x,25)
+    iqr  = q3-q1
+    dq = 1.5*iqr
+    x_m = np.logical_and(x<=(q3+dq),x>=(q1-dq))
+    print('Upper bound of',str(q3+dq))
+    print('Lower bound of',str(q1-dq))
+    x_out = x[x_m>0]
+    print('Excluded',str(max(x.shape)-max(x_out.shape)),'outliers')
+    return x_m
+
+def iqr_exclude(x):
+    q3 = np.percentile(x,75)
+    q1 = np.percentile(x,25)
+    print('75th percentile at',str(q3))
+    print('25th percentile at',str(q1))
+    iqr  = q3-q1
+    dq = iqr
+    x_m = np.logical_and(x<=(q3),x>=(q1))
+    print('Interquartile range of',str(iqr))
+    print('Upper bound of',str(q3+dq))
+    print('Lower bound of',str(q1-dq))
+    x_out = x[x_m>0]
+    print('Excluded',str(max(x.shape)-max(x_out.shape)),'outliers')
+    return x_m
+
+
+def scores_df(file_dir,csv_name,header,ColumnName1,ColumnName2):
+
+    # Load patient data
+    os.chdir(file_dir)
+    df = pd.read_csv(csv_name)
+
+    # Make a copy
+    dfd = df.copy()
+
+    # Drop blank columns
+    for (columnName, columnData) in dfd.iteritems():
+        if columnData.isnull().all():
+            print('Dropping NaN column at',columnName)
+            dfd.drop(columnName,axis=1,inplace=True)
+
+    # Add relevant column names from headers
+    df_headers = []
+    for (columnName, columnData) in dfd.iteritems():
+        if 'Unnamed' not in columnName:
+            df_headers.append(columnName)
+        else:
+            print('Renaming',columnName,'as',df_headers[-1]+' '+str(dfd.iloc[0, df.columns.get_loc(columnName)-1]))
+            dfd.rename(columns={columnName:df_headers[-1]+' '+str(dfd.iloc[0, df.columns.get_loc(columnName)-1])},inplace=True)
+
+    # Make a copy for motor symptoms
+    df_out = dfd.copy()
+    # Drop non-motor (III) columns
+    for (columnName, columnData) in dfd.iteritems():
+        if header in columnName:
+            next
+        elif 'Anonymous ID' in columnName:
+            df_out.iloc[0,0] = 'Anonymous ID'
+        else:
+            df_out.drop(columnName,axis=1,inplace=True)
+
+    # Rename columns with specific metrics
+    df_out.columns = df_out.iloc[0]
+    df_out = df_out.tail(-1)
+
+    # Convert columns to numerical arrays
+    score1 = df_out[ColumnName1].to_numpy().astype('float')
+    score2 = df_out[ColumnName2].to_numpy().astype('float')
+
+    # Find numerical entries only
+    cases = []
+    anon_ids = df_out['Anonymous ID'].to_numpy().astype('float')
+    for ids in np.arange(0,score1.__len__()):
+        if ~np.isnan(score1[ids]) and ~np.isnan(score2[ids]): 
+            cases.append(anon_ids[ids])
+
+    return df_out,anon_ids,cases
