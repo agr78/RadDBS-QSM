@@ -4,12 +4,7 @@ import pickle
 
 def data_loader(q_directory,s_directory,reload):
     # Set window level
-    level = 0
-    window = 500
-    m1=level-window/2
-    m2=level+window/2
-    visualize = 1
-    reextract = 0
+
     reload = 0
     # Load data
     nrows = 256

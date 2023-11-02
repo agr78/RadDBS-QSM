@@ -11,6 +11,7 @@ import time
 from joblib import Parallel, delayed
 import pandas as pd
 import os
+import pickle
 
 def pyvis(figx,figy):
     plt.style.use('dark_background')
