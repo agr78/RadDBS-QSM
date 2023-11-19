@@ -6,50 +6,56 @@ import numpy as np
 import SimpleITK as sitk
 from tqdm import tqdm
 import multiprocessing
-from multiprocess import Pool
+from radiomics import featureextractor 
 import time
 from joblib import Parallel, delayed
 import pandas as pd
 import os
 import pickle
+import six
+import logging
+import pandas as pd
+from sklearn.linear_model import Lasso
+from sklearn.preprocessing import StandardScaler
+import smogn
 
-def pyvis(figx,figy):
+def remove_keymap_conflicts(new_keys_set):
+    for prop in plt.rcParams:
+        if prop.startswith('keymap.'):
+            keys = plt.rcParams[prop]
+            remove_list = set(keys) & new_keys_set
+            for key in remove_list:
+                keys.remove(key)
+
+def process_key(event):
+    fig = event.canvas.figure
+    ax = fig.axes[0]
+    if event.key == 'j':
+        previous_slice(ax)
+    elif event.key == 'k':
+        next_slice(ax)
+    fig.canvas.draw()
+    
+def previous_slice(ax):
+    volume = ax.volume
+    ax.index = (ax.index-1) % volume.shape[0] 
+    ax.images[0].set_array(volume[ax.index])
+
+def next_slice(ax):
+    volume = ax.volume
+    ax.index = (ax.index+1) % volume.shape[0]
+    ax.images[0].set_array(volume[ax.index])
+
+def pyvis(volume,figx,figy):
     plt.style.use('dark_background')
     plt.rcParams["figure.figsize"] = (figx,figy)
-    def remove_keymap_conflicts(new_keys_set):
-        for prop in plt.rcParams:
-            if prop.startswith('keymap.'):
-                keys = plt.rcParams[prop]
-                remove_list = set(keys) & new_keys_set
-                for key in remove_list:
-                    keys.remove(key)
-
-    def multi_slice_viewer(volume):
-        remove_keymap_conflicts({'j', 'k'})
-        fig, ax = plt.subplots()
-        ax.volume = volume
-        ax.index = volume.shape[0]//2
-        ax.imshow(volume[ax.index])
-        fig.canvas.mpl_connect('key_press_event', process_key)
-
-    def process_key(event):
-        fig = event.canvas.figure
-        ax = fig.axes[0]
-        if event.key == 'j':
-            previous_slice(ax)
-        elif event.key == 'k':
-            next_slice(ax)
-        fig.canvas.draw()
-        
-    def previous_slice(ax):
-        volume = ax.volume
-        ax.index = (ax.index-1) % volume.shape[0] 
-        ax.images[0].set_array(volume[ax.index])
-
-    def next_slice(ax):
-        volume = ax.volume
-        ax.index = (ax.index+1) % volume.shape[0]
-        ax.images[0].set_array(volume[ax.index])
+    remove_keymap_conflicts({'j', 'k'})
+    fig, ax = plt.subplots()
+    ax.volume = volume
+    ax.index = volume.shape[0]//2
+    ax.imshow(volume[ax.index])
+    fig.canvas.mpl_connect('key_press_event', process_key)
+    
 
 def exclude_outliers(x):
     q3 = np.percentile(x,75)
@@ -80,20 +86,16 @@ def iqr_exclude(x):
 
 
 def scores_df(file_dir,csv_name,header,ColumnName1,ColumnName2):
-
     # Load patient data
     os.chdir(file_dir)
     df = pd.read_csv(csv_name)
-
     # Make a copy
     dfd = df.copy()
-
     # Drop blank columns
     for (columnName, columnData) in dfd.iteritems():
         if columnData.isnull().all():
             print('Dropping NaN column at',columnName)
             dfd.drop(columnName,axis=1,inplace=True)
-
     # Add relevant column names from headers
     df_headers = []
     for (columnName, columnData) in dfd.iteritems():
@@ -102,7 +104,6 @@ def scores_df(file_dir,csv_name,header,ColumnName1,ColumnName2):
         else:
             print('Renaming',columnName,'as',df_headers[-1]+' '+str(dfd.iloc[0, df.columns.get_loc(columnName)-1]))
             dfd.rename(columns={columnName:df_headers[-1]+' '+str(dfd.iloc[0, df.columns.get_loc(columnName)-1])},inplace=True)
-
     # Make a copy for motor symptoms
     df_out = dfd.copy()
     # Drop non-motor (III) columns
@@ -113,25 +114,21 @@ def scores_df(file_dir,csv_name,header,ColumnName1,ColumnName2):
             df_out.iloc[0,0] = 'Anonymous ID'
         else:
             df_out.drop(columnName,axis=1,inplace=True)
-
     # Rename columns with specific metrics
     df_out.columns = df_out.iloc[0]
     df_out = df_out.tail(-1)
-
     # Convert columns to numerical arrays
     score1 = df_out[ColumnName1].to_numpy().astype('float')
     score2 = df_out[ColumnName2].to_numpy().astype('float')
-
     # Find numerical entries only
     cases = []
     anon_ids = df_out['Anonymous ID'].to_numpy().astype('float')
     for ids in np.arange(0,score1.__len__()):
         if ~np.isnan(score1[ids]) and ~np.isnan(score2[ids]): 
             cases.append(anon_ids[ids])
-
     return df_out,anon_ids,cases
 
-def imfeat_plotter(lower_idx,upper_idx,title_string):
+def imfeat_plotter(Mc_lrs,Mi_lrs,Mc_vds,Kcs,R_rs,lower_idx,upper_idx,title_string):
     plt.close('all') 
     fig, ax = plt.subplots(figsize = (15,10))
     if title_string == 'wavelet':
@@ -154,7 +151,9 @@ def imfeat_plotter(lower_idx,upper_idx,title_string):
     plt.colorbar(cax, cax=caxf, orientation='vertical',ticks=[0, 0.5, 1])
     plt.show()
 
-def extract(qsm,seg,sub_in,pre_dbs_off_meds_in,npy_dir,phi_dir,suffix):
+def extract(qsm,seg,npy_dir,phi_dir,roi_path,sub_in,suffix):
+    logger = logging.getLogger("radiomics")
+    logger.setLevel(logging.ERROR)
     fv_count = 0
     seg_labels_all = [0,1,2,3,4,5,6,7]
     Phi_gt = []
@@ -167,6 +166,13 @@ def extract(qsm,seg,sub_in,pre_dbs_off_meds_in,npy_dir,phi_dir,suffix):
     seg_sitk.SetSpacing(voxel_size)
     qsm_sitk_gt = sitk.GetImageFromArray(qsm)
     qsm_sitk_gt.SetSpacing(voxel_size)
+    # Generate feature structure Phi from all ROIs and all cases
+    extractor = featureextractor.RadiomicsFeatureExtractor()
+    extractor.enableAllFeatures()
+    extractor.enableAllImageTypes()
+    extractor.enableFeatureClassByName('shape2D',enabled = False)
+    roi_txt = pd.read_csv(roi_path,header=None)
+    roi_df = roi_txt.astype(str)
     for j in seg_labels_all:
         if 0 < j < 7:
             fv_count = 0
@@ -180,24 +186,23 @@ def extract(qsm,seg,sub_in,pre_dbs_off_meds_in,npy_dir,phi_dir,suffix):
                     fv_count = fv_count+1
                     keylib.append(key)
                     roilib.append(j)
-                    mask = np.row_stack([roi_df[row].str.contains(str(int(roilib[-1])), na = False) for row in roi_df])
+                    mask = np.row_stack([roi_df[int(row)].str.contains(str(int(roilib[-1])), na = False) for row in roi_df])
                     roi_names.append(np.asarray(roi_df.iloc[mask.any(axis=0),1])[0])
-            x_row_gt.append(pre_dbs_off_meds_in)
             fv_count = fv_count+1
             print('Extracting features for subject',sub_in,
                 'ROI',j,'and appending feature matrix with vector of length',
-                fv_count,'with UPDRS score',pre_dbs_off_meds_in)
-
+                fv_count)
+    # Convert each row to numpy array
     X0_gt = np.array(x_row_gt)
     npy_file = npy_dir+'X_'+suffix+str(sub_in)+'.npy'
     np.save(npy_file,X0_gt)
     K = np.asarray(keylib)
     R = np.asarray(roi_names)
-    K_file = npy_dir+'K_'+suffix+str(sub_in)+'.npy'
-    R_file = npy_dir+'R_'+suffix+str(sub_in)+'.npy'
+    K_file = npy_dir+'K_'+str(sub_in)+'.npy'
+    R_file = npy_dir+'R_'+str(sub_in)+'.npy'
     np.save(K_file,K)
     np.save(R_file,R)
-    Phi_file = phi_dir+'Phi_'+suffix+str(sub_in)
+    Phi_file = phi_dir+'Phi_'+str(sub_in)
     print('Saving ground truth feature vector')
     with open(Phi_file, 'wb') as fp:  
         pickle.dump(Phi_gt, fp)
@@ -221,45 +226,125 @@ def k_crop(im,factor,win):
     plt.imshow(im_k[:,:,(cz//2)-10])
     return im_k
 
-def load_featstruct(phi_directory,X_directory,R_directory,K_directory,n_cases,n_rois,n_features):
+def load_featstruct(phi_directory,X_directory,R_directory,K_directory,n_rois,n_features):
     # Initialize output arrays
-    X_all = np.zeros((n_cases,n_rois,n_features))
-    R_all = np.zeros((n_cases,n_rois,n_features-1)).astype(str)
-    K_all = np.zeros((n_cases,n_rois,n_features-1)).astype(str)
-
+    Phi_all = []
+    ID_all = []
     # Convert directories to lists
     phi_directory_struct = os.listdir(phi_directory)
     X_directory_struct  = os.listdir(X_directory)
     R_directory_struct  = os.listdir(R_directory)
     K_directory_struct  = os.listdir(K_directory)
-
+    # Load feature dictionary
     for feature_matrix in phi_directory_struct:
         with open(phi_directory+feature_matrix, "rb") as fp:  
             Phi_case = pickle.load(fp)
             Phi_all.append(Phi_case)
-
+            ID_all.append(feature_matrix[-2:])
+    n_cases = len(ID_all)
+    X_all = np.zeros((n_cases,n_rois,n_features))
+    R_all = np.zeros((n_cases,n_rois,n_features)).astype(str)
+    K_all = np.zeros((n_cases,n_rois,n_features)).astype(str)
     # Load feature arrays
     count = 0
     for feature_array in X_directory_struct:
         X_case = np.load(X_directory+feature_array)
         X_all[count,:,:] = X_case.reshape((n_rois,n_features)).transpose((0,1))
         count = count+1
-
     # Load ROI indices
     count = 0
     for feature_roi in R_directory_struct:
         R_case = np.load(R_directory+feature_roi)
-        R_all[count,:,:] = R_case.reshape((n_rois,n_features-1)).transpose((0,1))
+        R_all[count,:,:] = R_case.reshape((n_rois,n_features)).transpose((0,1))
         count = count+1
-
     # Load key indices
     count = 0
     for feature_key in K_directory_struct:
         K_case = np.load(K_directory+feature_key)
-        K_all[count,:,:] = K_case.reshape((n_rois,n_features-1)).transpose((0,1))
+        K_all[count,:,:] = K_case.reshape((n_rois,n_features)).transpose((0,1))
         count = count+1
+    return Phi_all, X_all, R_all, K_all, ID_all
 
-    return Phi_all, X_all, R_all, K_all
+def filter_scores(file_path,score,key,ids):
+    df = pd.read_csv(file_path)
+    dfd = df.copy()
+    # Drop blank columns
+    for (columnName, columnData) in dfd.iteritems():
+        if columnData.isnull().all():
+            print('Dropping NaN column at',columnName)
+            dfd.drop(columnName,axis=1,inplace=True)
+    # Add relevant column names from headers
+    for (columnName, columnData) in dfd.iteritems():
+            dfd.rename(columns={columnName:columnName+': '+columnData.values[0]},inplace=True)
+    def drop_prefix(self, prefix):
+        self.columns = self.columns.str.lstrip(prefix)
+        return self
+    pd.core.frame.DataFrame.drop_prefix = drop_prefix
+    dfd.drop_prefix('Unnamed:')        
+    for (columnName, columnData) in dfd.iteritems():
+        if columnName[1].isdigit():
+            dfd.rename(columns={columnName:columnName[4:]},inplace=True)
+    # Make a copy for motor symptoms
+    motor_df = dfd.copy()
+    # Drop non-motor (III) columns
+    for (columnName, columnData) in motor_df.iteritems():
+        if score in columnName:
+            next
+        elif key in columnName:
+            next
+        elif ids in columnName:
+            next
+        else:
+            motor_df.drop(columnName,axis=1,inplace=True)
+    # Drop subheader
+    motor_df = motor_df.tail(-1)
+    motor_df = motor_df.replace('na',np.nan)
+    return motor_df
+
+def get_full_cases(df,h0,h1,h2,h3):
+    h0a = pd.to_numeric(df[h0],errors='coerce').to_numpy().astype('float')
+    h1a = df[h1].to_numpy().astype('float')
+    h2a = df[h2].to_numpy().astype('float')
+    h3a = df[h3].to_numpy().astype('float')
+    idx = ~np.isnan(h3a+h2a+h1a+h0a)
+    subs = h0a[idx]
+    pre_updrs_off = h1a[idx]
+    pre_imp = (h1a[idx]-h2a[idx])/h1a[idx]
+    true_imp = (h1a[idx]-h3a[idx])/h1a[idx]
+    return subs, pre_imp, true_imp, pre_updrs_off
+
+def make_feature_matrix(X_all_c,pre_metric):
+    X = np.zeros((X_all_c.shape[0],X_all_c.shape[1],X_all_c.shape[2]+1))
+    X[:,:,:-1] = X_all_c
+    X[:,:,-1] = np.matlib.repmat(pre_metric,X_all_c.shape[1],1).T
+    X = X.reshape(X.shape[0],((X.shape[1])*X.shape[2]))
+    scaler = StandardScaler()
+    X = scaler.fit_transform(X)
+    return X
+
+def rad_smogn(X_t,y,yo,yu,Rmo,Rmu):
+    # Create data frame for SMOGN generation
+    n_cases = len(y)
+    D = pd.DataFrame(np.hstack((X_t,(np.asarray(y).reshape(n_cases,1)))))
+    for col in D.columns:
+        D.rename(columns={col:str(col)},inplace=True)
+    # Specify phi relevance values
+    Rm = [[yo,  Rmo, 0],  ## over-sample ("minority")
+        [yu, Rmu, 0],  ## under-sample ("majority")
+        ]
+    # Conduct SMOGN
+    print('Prior to SMOGN sampling, mean is',X_t.mean(),'standard deviation is',X_t.std())
+    X_smogn = smogn.smoter(data = D, y = str(D.columns[-1]),rel_method = 'manual',rel_ctrl_pts_rg = Rm)
+    # Drop label
+    X_in_s = np.array(X_smogn)[:,:-1] 
+    print('After SMOGN sampling, mean is',X_in_s.mean(),'standard deviation is',X_in_s.std())
+    print('Passing SMOGN augmented dataset of size',len(X_smogn))
+    for j in np.arange(X_in_s.shape[1]):
+        if np.array_equal(X_in_s[:,j],np.array(X_smogn)[:,-1]) == 0:
+            next
+        else:
+            print('Labels detected at column',j)
+    return X_in_s
 
 def find_nearest(array, value):
     array = np.asarray(array)
@@ -267,16 +352,22 @@ def find_nearest(array, value):
     return array[idx]
 
 def l_curve(base_min,base_max,X,y,n_points):
-    fig,ax = plt.subplots()
     alphas = np.logspace(base_min,base_max,n_points)
     solution_norm = []
     residual_norm = []
-    idx = np.where(alphas==find_nearest(alphas,1e-4))
+
     for alpha in alphas: 
-        lm = Lasso(alpha=alpha,max_iter=10000)
+        lm = Lasso(alpha=alpha,max_iter=1000,tol=1e-2)
         lm.fit(X, y)
         solution_norm += [(lm.coef_**2).sum()]
         residual_norm += [((lm.predict(X) - y)**2).sum()]
 
     plt.loglog(residual_norm, solution_norm, 'k-')
+    for i, txt in enumerate(alphas):
+        if np.mod(i,10)==0:
+            plt.annotate(str('{:.2}'.format(10**np.log10(float(txt)).round())), (residual_norm[i], solution_norm[i]+0.005))
+    plt.title('L-curve for $(X,y)$')
+    plt.xlabel('Residual norm')
+    plt.ylabel('Solution norm')
     plt.show()
+    plt.style.use('default')
