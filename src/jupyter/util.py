@@ -329,10 +329,12 @@ def scale_feature_matrix(X_test,pre_metric_test,scaler):
     X[:,:,:-1] = X_test
     X[:,:,-1] = np.matlib.repmat(pre_metric_test,X_test.shape[1],1).T
     X = X.reshape(X.shape[0],((X.shape[1])*X.shape[2]))
-    X = scaler.transform(X)
+    scaler = StandardScaler()
+    print('Rescaling test data entirely')
+    X = scaler.fit_transform(X)
     return X
 
-def rad_smogn(X_t,y,yo,yu,Rmo,Rmu,t):
+def rad_smogn(X_t,y,yo1,yo2,yu,Rmo,Rmu,p):
     warnings.simplefilter(action='ignore', category=pd.errors.PerformanceWarning)
     warnings.simplefilter(action='ignore', category=RuntimeWarning)
     # Create data frame for SMOGN generation
@@ -341,8 +343,9 @@ def rad_smogn(X_t,y,yo,yu,Rmo,Rmu,t):
     for col in D.columns:
         D.rename(columns={col:str(col)},inplace=True)
     # Specify phi relevance values
-    Rm = [[yo,  Rmo,    0],  
-          [yu,  Rmu,    0]]
+    Rm = [[yo1,  Rmo,    0],  
+          [yu,  Rmu,    0],
+          [yo2,  Rmo,    0]]
     d = len(D.columns)
     yi = pd.DataFrame(D[str(d-1)])
     # Pre-index targets
@@ -360,23 +363,38 @@ def rad_smogn(X_t,y,yo,yu,Rmo,Rmu,t):
     y_phi = phi(y = y_sort,              
     ctrl_pts = phi_params 
     )
-    # Verify sample size reduction
+    # Verify sample size reduction using default threshold
+    t = 0.5
     N_us = np.sum(np.asarray(y_phi)>t)
     idx_kept = (np.asarray(y_phi)<=t)*(idx[1]+1) > 0
     # Conduct SMOGN
     print('Prior to SMOGN sampling, mean is',X_t.mean(),'standard deviation is',X_t.std())
-    X_smogn = smogn.smoter(data = D, y = str(D.columns[-1]),rel_method='manual',rel_ctrl_pts_rg = Rm,rel_thres=t)
+    X_smogn = smogn.smoter(data = D, y = str(D.columns[-1]),rel_method='manual',rel_ctrl_pts_rg = Rm,pert=p)
     X_smogn = np.asarray(X_smogn)
-    if np.sum(np.sqrt((X_t[idx_kept,:]-X_smogn[:,:-1]))**2) < 1e-16:
-        print('Synthetic data and input data are identical')
-    if X_t.shape[0]-X_smogn.shape[0] == N_us:
-        print('New dataset size verified')
+    # if np.sum(np.sqrt((X_t[idx_kept,:]-X_smogn[:,:-1]))**2) < 1e-16:
+    #     print('Synthetic data and input data are identical')
+    # if X_t.shape[0]-X_smogn.shape[0] == N_us:
+    #     print('New dataset size verified')
     print('After SMOGN sampling, mean is',X_smogn[:,:-1].mean(),'standard deviation is',X_smogn[:,:-1].std())
     y_smogn = X_smogn[:,-1]
     sscaler = StandardScaler()
     X_smogn = sscaler.fit_transform(X_smogn[:,:-1])
     print('After rescaling, SMOGN mean is',X_smogn[:,:-1].mean(),'standard deviation is',X_smogn[:,:-1].std())
     return X_smogn,y_smogn,idx_kept,sscaler
+
+def batch_smogn(X_t,y,yo,yu,Rmo,Rmu):
+    Xb = []
+    yb = []
+    idxs = []
+    sscalers = []
+    for p in np.linspace(0.001,0.1,10):
+        X_smogn,y_smogn,idx_kept,sscaler = rad_smogn(X_t,y,yo,yu,Rmo,Rmu,p)
+        Xb.append(X_smogn)
+        yb.append(y_smogn)
+        idxs.append(idx_kept)
+        sscalers.append(sscaler)
+    return Xb,yb,idxs,sscalers
+
 
 def find_nearest(array, value):
     array = np.asarray(array)
