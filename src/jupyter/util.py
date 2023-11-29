@@ -15,6 +15,7 @@ import pickle
 import six
 import logging
 import pandas as pd
+from sklearn.model_selection import ShuffleSplit
 from sklearn.linear_model import Lasso
 from sklearn.preprocessing import StandardScaler
 import smogn
@@ -314,6 +315,14 @@ def get_full_cases(df,h0,h1,h2,h3):
     pre_imp = (h1a[idx]-h2a[idx])/h1a[idx]
     true_imp = (h1a[idx]-h3a[idx])/h1a[idx]
     return subs, pre_imp, true_imp, pre_updrs_off
+
+def set_split(X,y,N,tp):
+    sss = ShuffleSplit(n_splits=N, test_size=tp)
+    sss.get_n_splits(X,y)
+    train_index, test_index = next(sss.split(X,y))
+    X_train,X_test = X[train_index], y[test_index] 
+    y_train,y_test = y[train_index], y[test_index]
+    return X_train, X_test, y_train, y_test, train_index, test_index
 
 def make_feature_matrix(X_all_c,pre_metric):
     X = np.zeros((X_all_c.shape[0],X_all_c.shape[1],X_all_c.shape[2]+1))
