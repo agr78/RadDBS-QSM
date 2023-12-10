@@ -3,6 +3,7 @@ import matplotlib.pyplot as plt
 import matplotlib as mpl
 from mpl_toolkits.axes_grid1 import make_axes_locatable
 import numpy as np
+from numpy import matlib as mb
 import SimpleITK as sitk
 from tqdm import tqdm
 import multiprocessing
@@ -17,12 +18,14 @@ import logging
 import pandas as pd
 from sklearn.model_selection import ShuffleSplit
 from sklearn.linear_model import Lasso
-from sklearn.preprocessing import StandardScaler
+import sklearn.preprocessing as skp
 import smogn
 from smogn.phi import phi
 from smogn.phi_ctrl_pts import phi_ctrl_pts
 import warnings
 import sys
+import collections
+import math
 
 def blockPrint():
     sys.stdout = open(os.devnull, 'w')
@@ -327,29 +330,30 @@ def set_split(X,y,N,tp):
     sss = ShuffleSplit(n_splits=N, test_size=tp)
     sss.get_n_splits(X,y)
     train_index, test_index = next(sss.split(X,y))
-    X_train,X_test = X[train_index], y[test_index] 
+    X_train,X_test = X[train_index], X[test_index] 
     y_train,y_test = y[train_index], y[test_index]
     return X_train, X_test, y_train, y_test, train_index, test_index
 
 def make_feature_matrix(X_all_c,pre_metric):
     X = np.zeros((X_all_c.shape[0],X_all_c.shape[1],X_all_c.shape[2]+1))
     X[:,:,:-1] = X_all_c
-    X[:,:,-1] = np.matlib.repmat(pre_metric,X_all_c.shape[1],1).T
+    X[:,:,-1] = mb.repmat(pre_metric,X_all_c.shape[1],1).T
     X = X.reshape(X.shape[0],((X.shape[1])*X.shape[2]))
-    scaler = StandardScaler()
-    X = scaler.fit_transform(X)
+    scaler = skp.MinMaxScaler()
+    scaler.fit(X)
+    X = scaler.transform(X)
     return X, scaler
 
 def scale_feature_matrix(X_test,pre_metric_test,scaler):
     X = np.zeros((X_test.shape[0],X_test.shape[1],X_test.shape[2]+1))
     X[:,:,:-1] = X_test
-    X[:,:,-1] = np.matlib.repmat(pre_metric_test,X_test.shape[1],1).T
+    X[:,:,-1] = mb.repmat(pre_metric_test,X_test.shape[1],1).T
     X = X.reshape(X.shape[0],((X.shape[1])*X.shape[2]))
     X = scaler.transform(X)
     X = X.reshape(X_test.shape[0],X_test.shape[1],X_test.shape[2]+1)
     return X
 
-def rad_smogn(X_t,y,yo1,yo2,yu,Rmo,Rmu,t):
+def rad_smogn(X_t,y,yo1,yu,Rmo,Rmu,t,p):
     warnings.simplefilter(action='ignore', category=pd.errors.PerformanceWarning)
     warnings.simplefilter(action='ignore', category=RuntimeWarning)
     # Create data frame for SMOGN generation
@@ -359,8 +363,7 @@ def rad_smogn(X_t,y,yo1,yo2,yu,Rmo,Rmu,t):
         D.rename(columns={col:str(col)},inplace=True)
     # Specify phi relevance values
     Rm = [[yo1,  Rmo,    0],  
-          [yu,   Rmu,    0],
-          [yo2,  Rmo,    0]]
+          [yu,   Rmu,    0]]
     d = len(D.columns)
     yi = pd.DataFrame(D[str(d-1)])
     # Pre-index targets
@@ -373,27 +376,30 @@ def rad_smogn(X_t,y,yo1,yo2,yu,Rmo,Rmu,t):
     # Generate relevance function
     phi_params = phi_ctrl_pts(y = y_sort,
         method = 'manual',                                
-        ctrl_pts = Rm                                      
-    )
+        ctrl_pts = Rm)
     y_phi = phi(y = y_sort,              
-    ctrl_pts = phi_params 
-    )
+    ctrl_pts = phi_params)
     # Verify sample size reduction
     N_us = np.sum(np.asarray(y_phi)>t)
     idx_kept = (np.asarray(y_phi)<=t)*(idx[1]+1) > 0
     # Conduct SMOGN
-    blockPrint()
     print('Prior to SMOGN sampling, mean is',X_t.mean(),'standard deviation is',X_t.std())
-    X_smogn = smogn.smoter(data = D, y = str(D.columns[-1]),rel_method='manual',rel_ctrl_pts_rg = Rm,rel_thres=t)
-    X_smogn = np.asarray(X_smogn)
+    X_smogn = smogn.smoter(data = D, y = str(D.columns[-1]),rel_method='manual',rel_ctrl_pts_rg = Rm,rel_thres=t,pert=p)
+    X_smogn = np.asarray(X_smogn)[:,:-1]
     print(X_smogn.shape)
     print('After SMOGN sampling, mean is',X_smogn[:,:-1].mean(),'standard deviation is',X_smogn[:,:-1].std())
     y_smogn = X_smogn[:,-1]
-    sscaler = StandardScaler()
-    X_smogn = sscaler.fit_transform(X_smogn[:,:-1])
+    #sscaler = StandardScaler()
+    #X_smogn = sscaler.fit_transform(X_smogn)
     print('After rescaling, SMOGN mean is',X_smogn[:,:-1].mean(),'standard deviation is',X_smogn[:,:-1].std())
-    enablePrint()
-    return X_smogn,y_smogn,idx_kept,sscaler
+    return X_smogn,y_smogn#,idx_kept#,sscaler
+
+
+def calc_entropy(s):
+    P = [n_x[1]/len(s) for n_x in collections.Counter(s).items()]
+    e_x = [-p_x*math.log(p_x,2) for p_x in P]    
+    H = sum(e_x)
+    return H
 
 def find_nearest(array, value):
     array = np.asarray(array)
