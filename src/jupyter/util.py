@@ -16,8 +16,9 @@ import pickle
 import six
 import logging
 import pandas as pd
-from sklearn.model_selection import ShuffleSplit
 from sklearn.linear_model import Lasso
+import sklearn.model_selection as sms
+from scipy.stats import linregress
 import sklearn.preprocessing as skp
 import smogn
 from smogn.phi import phi
@@ -26,6 +27,7 @@ import warnings
 import sys
 import collections
 import math
+
 
 def blockPrint():
     sys.stdout = open(os.devnull, 'w')
@@ -327,19 +329,18 @@ def get_full_cases(df,h0,h1,h2,h3):
     return subs, pre_imp, true_imp, pre_updrs_off
 
 def set_split(X,y,N,tp):
-    sss = ShuffleSplit(n_splits=N, test_size=tp)
+    sss = sms.ShuffleSplit(n_splits=N, test_size=tp)
     sss.get_n_splits(X,y)
     train_index, test_index = next(sss.split(X,y))
     X_train,X_test = X[train_index], X[test_index] 
     y_train,y_test = y[train_index], y[test_index]
     return X_train, X_test, y_train, y_test, train_index, test_index
 
-def make_feature_matrix(X_all_c,pre_metric):
+def make_feature_matrix(X_all_c,pre_metric,scaler):
     X = np.zeros((X_all_c.shape[0],X_all_c.shape[1],X_all_c.shape[2]+1))
     X[:,:,:-1] = X_all_c
     X[:,:,-1] = mb.repmat(pre_metric,X_all_c.shape[1],1).T
     X = X.reshape(X.shape[0],((X.shape[1])*X.shape[2]))
-    scaler = skp.MinMaxScaler()
     scaler.fit(X)
     X = scaler.transform(X)
     return X, scaler
@@ -401,9 +402,66 @@ def calc_entropy(s):
     H = sum(e_x)
     return H
 
+def eval_prediction(results,y_test,names,fig_size):
+    plt.rcParams["figure.figsize"] = fig_size
+    n_models = results.shape[0]
+    # Cross validation results
+    if np.mod(n_models,2)==0:
+        plt.rcParams["figure.figsize"] = (fig_size[0]/2,fig_size[1]*2)
+        [fig,ax] = plt.subplots(2,int(n_models//2),sharex=True, sharey=True)
+        ax = np.ravel(ax)
+        ax_reshape = 2
+    elif np.mod(n_models,3)==0:
+        plt.rcParams["figure.figsize"] = (fig_size[0]/3,fig_size[1]*3)
+        [fig,ax] = plt.subplots(3,int(n_models//3),sharex=True, sharey=True)
+        ax = np.ravel(ax)
+        ax_reshape = 3
+    else:
+        [fig,ax] = plt.subplots(1,n_models,sharex=True, sharey=True)
+        ax_reshape = 0
+    for j in np.arange(n_models):
+        lr_prepost = linregress(results[j],y_test)
+        ax[j].scatter(results[j],y_test)
+        ax[j].plot(results[j],results[j]*lr_prepost.slope+lr_prepost.intercept,'-r')
+        ax[j].set_title(names[j])
+        ax[j].set_ylabel("DBS improvement")
+        ax[j].set_xlabel("Prediction")
+        text = f"$y={lr_prepost.slope:0.2f}\; x{lr_prepost.intercept:+0.2f}$\n$r = {lr_prepost.rvalue:0.2f}$\n$p = {lr_prepost.pvalue:0.3f}$"
+        ax[j].text(0.35, 0.75, text,transform=ax[j].transAxes,
+            fontsize=14, verticalalignment='top')
+        ax[j].hlines(0.3,0,2,linestyle='dashed',color='black')
+        ax[j].vlines(0.3,0,2,linestyle='dashed',color='black')
+    if ax_reshape == 3:
+        ax = np.reshape(ax, (3, int(n_models/3)))
+    elif ax_reshape == 2:
+        ax = np.reshape(ax, (2, int(n_models/2)))
+    plt.style.use('default')
+    plt.show
+
+def model_scale(scaler_type,X_train,train_index,X_test,test_index,pre_metric):
+    scaler = scaler_type
+    X0_tt,scaler = make_feature_matrix(X_train,pre_metric[train_index],scaler)
+    X_test_in = scale_feature_matrix(X_test,pre_metric[test_index],scaler)
+    return X0_tt,scaler,X_test_in
+
+def gridsearch_pickparams(model,cvn,param_grid,scaler_type,X_train,train_index,X_test,test_index,pre_metric,y_train,scoring,n_js):
+    gsc = sms.GridSearchCV(
+        model,
+        param_grid,
+        cv=cvn, 
+        scoring=scoring,
+        verbose=10,
+        n_jobs=n_js,
+        return_train_score=True,
+        refit=False)
+    X0_tt,scaler,X_test_in = model_scale(scaler_type,X_train,train_index,X_test,test_index,pre_metric)
+    grid_result = gsc.fit(X0_tt,y_train)
+    best_params = grid_result.best_params_
+    return best_params
+
 def find_nearest(array, value):
-    array = np.asarray(array)
-    idx = (np.abs(array - value)).argmin()
+    array = np.asarray(array) 
+    idx = (np.abs(array-value)).argmin()
     return array[idx]
 
 def l_curve(base_min,base_max,X,y,n_points):
