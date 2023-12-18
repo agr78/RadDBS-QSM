@@ -27,6 +27,7 @@ import warnings
 import sys
 import collections
 import math
+import nibabel as nib
 
 
 def blockPrint():
@@ -484,3 +485,8 @@ def l_curve(base_min,base_max,X,y,n_points):
     plt.ylabel('Solution norm')
     plt.show()
     plt.style.use('default')
+
+def nii_slicer(case_path,slice_path):
+    V = nib.load(case_path).get_fdata()
+    for j in np.arange(V.shape[2]):
+        Vj = nib.save(V[:,:,j],slice_path)
