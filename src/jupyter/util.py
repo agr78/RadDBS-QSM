@@ -167,7 +167,7 @@ def imfeat_plotter(Mc_lrs,Mi_lrs,Mc_vds,Kcs,R_rs,lower_idx,upper_idx,title_strin
     plt.colorbar(cax, cax=caxf, orientation='vertical',ticks=[0, 0.5, 1])
     plt.show()
 
-def extract(qsm,seg,npy_dir,phi_dir,roi_path,sub_in,suffix):
+def extract(qsm,seg,npy_dir,phi_dir,roi_path,sub_in,suffix,slices):
     logger = logging.getLogger("radiomics")
     logger.setLevel(logging.ERROR)
     fv_count = 0
@@ -178,10 +178,20 @@ def extract(qsm,seg,npy_dir,phi_dir,roi_path,sub_in,suffix):
     roilib = []
     roi_names = []
     voxel_size = ((0.5,0.5,0.5))
-    seg_sitk = sitk.GetImageFromArray(seg)
-    seg_sitk.SetSpacing(voxel_size)
-    qsm_sitk_gt = sitk.GetImageFromArray(qsm)
-    qsm_sitk_gt.SetSpacing(voxel_size)
+    if slices == True:
+        for i in np.arange(seg.shape[2]):
+            seg_sitk = sitk.GetImageFromArray(seg[i])
+            seg_sitk.SetSpacing(voxel_size)
+            qsm_sitk_gt = sitk.GetImageFromArray(qsm[i])
+            qsm_sitk_gt.SetSpacing(voxel_size)
+        print('Slice extraction applied, total sample size is',str(len(seg_sitk)))
+        npy_dir = npy_dir+'/slices/'
+        phi_dir = phi_dir+'/slices/'
+    else:
+        seg_sitk = sitk.GetImageFromArray(seg)
+        seg_sitk.SetSpacing(voxel_size)
+        qsm_sitk_gt = sitk.GetImageFromArray(qsm)
+        qsm_sitk_gt.SetSpacing(voxel_size)
     # Generate feature structure Phi from all ROIs and all cases
     extractor = featureextractor.RadiomicsFeatureExtractor()
     extractor.enableAllFeatures()
