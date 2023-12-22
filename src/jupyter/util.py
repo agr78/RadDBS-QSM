@@ -195,14 +195,9 @@ def extract(qsm,seg,npy_dir,phi_dir,roi_path,sub_in,suffix,slices):
                 roi_txt = pd.read_csv(roi_path,header=None)
                 roi_df = roi_txt.astype(str)
                 seg_labels_all = np.unique(seg[:,:,i])
-                print(seg_labels_all)
                 for j in seg_labels_all:
                     if 0.0 < j < 7.0:
-                        # print(np.sum(sitk.GetArrayFromImage(seg_sitk)==j))
                         seg_slice = np.asarray(seg[:,:,i])
-                        print(np.sum(seg_slice==j))
-                        print(np.max(np.sum((seg_slice==j),axis=0)))
-                        print(np.max(np.sum((seg_slice==j),axis=1)))
                         if (np.sum(seg_slice==j) > 1) and (np.max(np.sum((seg_slice==j),axis=0)) > 1) and (np.max(np.sum((seg_slice==j),axis=1)) > 1):
                             fv_count = 0
                             featureVector_gt = extractor.execute(qsm_sitk_gt,seg_sitk,label=int(j))
@@ -221,20 +216,19 @@ def extract(qsm,seg,npy_dir,phi_dir,roi_path,sub_in,suffix,slices):
                             print('Extracting features for subject',sub_in,
                                 'ROI',j,'and appending feature matrix with vector of length',
                                 fv_count)
-                            # Convert each row to numpy array
-                            X0_gt = np.array(x_row_gt)
-                            npy_file = npy_dir+'X_'+suffix+str(sub_in)+'_'+str(i)+'.npy'
-                            np.save(npy_file,X0_gt)
-                            K = np.asarray(keylib)
-                            R = np.asarray(roi_names)
-                            K_file = npy_dir+'K_'+str(sub_in)+'_'+str(i)+'.npy'
-                            R_file = npy_dir+'R_'+str(sub_in)+'_'+str(i)+'.npy'
-                            np.save(K_file,K)
-                            np.save(R_file,R)
-                            Phi_file = phi_dir+'Phi_'+str(sub_in)+'_'+str(i)
-                            print('Saving ground truth feature vector')
-                            with open(Phi_file, 'wb') as fp:  
-                                pickle.dump(Phi_gt, fp)
+                # Convert each row to numpy array
+                X0_gt = np.array(x_row_gt)
+                npy_file = npy_dir+'X_'+suffix+str(sub_in)+'_'+str(i)+'.npy'
+                np.save(npy_file,X0_gt)
+                K = np.asarray(keylib)
+                R = np.asarray(roi_names)
+                K_file = npy_dir+'K_'+str(sub_in)+'_'+str(i)+'.npy'
+                R_file = npy_dir+'R_'+str(sub_in)+'_'+str(i)+'.npy'
+                np.save(K_file,K)
+                np.save(R_file,R)
+                Phi_file = phi_dir+'Phi_'+str(sub_in)+'_'+str(i)
+                with open(Phi_file, 'wb') as fp:  
+                    pickle.dump(Phi_gt, fp)
     else:
         seg_sitk = sitk.GetImageFromArray(seg)
         seg_sitk.SetSpacing(voxel_size)
@@ -277,7 +271,7 @@ def extract(qsm,seg,npy_dir,phi_dir,roi_path,sub_in,suffix,slices):
         np.save(K_file,K)
         np.save(R_file,R)
         Phi_file = phi_dir+'Phi_'+str(sub_in)
-        print('Saving ground truth feature vector')
+        print('Saving feature vectors of size',str(X0_gt.shape))
         with open(Phi_file, 'wb') as fp:  
             pickle.dump(Phi_gt, fp)
     
