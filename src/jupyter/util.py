@@ -179,59 +179,107 @@ def extract(qsm,seg,npy_dir,phi_dir,roi_path,sub_in,suffix,slices):
     roi_names = []
     voxel_size = ((0.5,0.5,0.5))
     if slices == True:
-        for i in np.arange(seg.shape[2]):
-            seg_sitk = sitk.GetImageFromArray(seg[i])
-            seg_sitk.SetSpacing(voxel_size)
-            qsm_sitk_gt = sitk.GetImageFromArray(qsm[i])
-            qsm_sitk_gt.SetSpacing(voxel_size)
-        print('Slice extraction applied, total sample size is',str(len(seg_sitk)))
         npy_dir = npy_dir+'/slices/'
         phi_dir = phi_dir+'/slices/'
+        for i in np.arange(seg.shape[2]):
+            if np.sum(seg[:,:,i])>1:
+                seg_sitk = sitk.GetImageFromArray(seg[:,:,i])
+                seg_sitk.SetSpacing(voxel_size)
+                qsm_sitk_gt = sitk.GetImageFromArray(qsm[:,:,i])
+                qsm_sitk_gt.SetSpacing(voxel_size)
+                print('Evaluating slice',str(i),'on case',str(sub_in))
+                # Generate feature structure Phi from all ROIs and all cases
+                extractor = featureextractor.RadiomicsFeatureExtractor()
+                extractor.enableAllFeatures()
+                extractor.enableAllImageTypes()
+                roi_txt = pd.read_csv(roi_path,header=None)
+                roi_df = roi_txt.astype(str)
+                seg_labels_all = np.unique(seg[:,:,i])
+                print(seg_labels_all)
+                for j in seg_labels_all:
+                    if 0.0 < j < 7.0:
+                        # print(np.sum(sitk.GetArrayFromImage(seg_sitk)==j))
+                        seg_slice = np.asarray(seg[:,:,i])
+                        print(np.sum(seg_slice==j))
+                        print(np.max(np.sum((seg_slice==j),axis=0)))
+                        print(np.max(np.sum((seg_slice==j),axis=1)))
+                        if (np.sum(seg_slice==j) > 1) and (np.max(np.sum((seg_slice==j),axis=0)) > 1) and (np.max(np.sum((seg_slice==j),axis=1)) > 1):
+                            fv_count = 0
+                            featureVector_gt = extractor.execute(qsm_sitk_gt,seg_sitk,label=int(j))
+                            Phi_gt.append(featureVector_gt)
+                            for key, value in six.iteritems(featureVector_gt):
+                                if 'diagnostic' in key:
+                                    next
+                                else:
+                                    x_row_gt.append(featureVector_gt[key])
+                                    fv_count = fv_count+1
+                                    keylib.append(key)
+                                    roilib.append(j)
+                                    mask = np.row_stack([roi_df[int(row)].str.contains(str(int(roilib[-1])), na = False) for row in roi_df])
+                                    roi_names.append(np.asarray(roi_df.iloc[mask.any(axis=0),1])[0])
+                            fv_count = fv_count+1
+                            print('Extracting features for subject',sub_in,
+                                'ROI',j,'and appending feature matrix with vector of length',
+                                fv_count)
+                            # Convert each row to numpy array
+                            X0_gt = np.array(x_row_gt)
+                            npy_file = npy_dir+'X_'+suffix+str(sub_in)+'_'+str(i)+'.npy'
+                            np.save(npy_file,X0_gt)
+                            K = np.asarray(keylib)
+                            R = np.asarray(roi_names)
+                            K_file = npy_dir+'K_'+str(sub_in)+'_'+str(i)+'.npy'
+                            R_file = npy_dir+'R_'+str(sub_in)+'_'+str(i)+'.npy'
+                            np.save(K_file,K)
+                            np.save(R_file,R)
+                            Phi_file = phi_dir+'Phi_'+str(sub_in)+'_'+str(i)
+                            print('Saving ground truth feature vector')
+                            with open(Phi_file, 'wb') as fp:  
+                                pickle.dump(Phi_gt, fp)
     else:
         seg_sitk = sitk.GetImageFromArray(seg)
         seg_sitk.SetSpacing(voxel_size)
         qsm_sitk_gt = sitk.GetImageFromArray(qsm)
         qsm_sitk_gt.SetSpacing(voxel_size)
-    # Generate feature structure Phi from all ROIs and all cases
-    extractor = featureextractor.RadiomicsFeatureExtractor()
-    extractor.enableAllFeatures()
-    extractor.enableAllImageTypes()
-    extractor.enableFeatureClassByName('shape2D',enabled = False)
-    roi_txt = pd.read_csv(roi_path,header=None)
-    roi_df = roi_txt.astype(str)
-    for j in seg_labels_all:
-        if 0 < j < 7:
-            fv_count = 0
-            featureVector_gt = extractor.execute(qsm_sitk_gt,seg_sitk,label=int(j));
-            Phi_gt.append(featureVector_gt)
-            for key, value in six.iteritems(featureVector_gt):
-                if 'diagnostic' in key:
-                    next
-                else:
-                    x_row_gt.append(featureVector_gt[key])
-                    fv_count = fv_count+1
-                    keylib.append(key)
-                    roilib.append(j)
-                    mask = np.row_stack([roi_df[int(row)].str.contains(str(int(roilib[-1])), na = False) for row in roi_df])
-                    roi_names.append(np.asarray(roi_df.iloc[mask.any(axis=0),1])[0])
-            fv_count = fv_count+1
-            print('Extracting features for subject',sub_in,
-                'ROI',j,'and appending feature matrix with vector of length',
-                fv_count)
-    # Convert each row to numpy array
-    X0_gt = np.array(x_row_gt)
-    npy_file = npy_dir+'X_'+suffix+str(sub_in)+'.npy'
-    np.save(npy_file,X0_gt)
-    K = np.asarray(keylib)
-    R = np.asarray(roi_names)
-    K_file = npy_dir+'K_'+str(sub_in)+'.npy'
-    R_file = npy_dir+'R_'+str(sub_in)+'.npy'
-    np.save(K_file,K)
-    np.save(R_file,R)
-    Phi_file = phi_dir+'Phi_'+str(sub_in)
-    print('Saving ground truth feature vector')
-    with open(Phi_file, 'wb') as fp:  
-        pickle.dump(Phi_gt, fp)
+        # Generate feature structure Phi from all ROIs and all cases
+        extractor = featureextractor.RadiomicsFeatureExtractor()
+        extractor.enableAllFeatures()
+        extractor.enableAllImageTypes()
+        extractor.enableFeatureClassByName('shape2D',enabled=False)
+        roi_txt = pd.read_csv(roi_path,header=None)
+        roi_df = roi_txt.astype(str)
+        for j in seg_labels_all:
+            if 0 < j < 7:
+                fv_count = 0
+                featureVector_gt = extractor.execute(qsm_sitk_gt,seg_sitk,label=int(j));
+                Phi_gt.append(featureVector_gt)
+                for key, value in six.iteritems(featureVector_gt):
+                    if 'diagnostic' in key:
+                        next
+                    else:
+                        x_row_gt.append(featureVector_gt[key])
+                        fv_count = fv_count+1
+                        keylib.append(key)
+                        roilib.append(j)
+                        mask = np.row_stack([roi_df[int(row)].str.contains(str(int(roilib[-1])), na = False) for row in roi_df])
+                        roi_names.append(np.asarray(roi_df.iloc[mask.any(axis=0),1])[0])
+                fv_count = fv_count+1
+                print('Extracting features for subject',sub_in,
+                    'ROI',j,'and appending feature matrix with vector of length',
+                    fv_count)
+        # Convert each row to numpy array
+        X0_gt = np.array(x_row_gt)
+        npy_file = npy_dir+'X_'+suffix+str(sub_in)+'.npy'
+        np.save(npy_file,X0_gt)
+        K = np.asarray(keylib)
+        R = np.asarray(roi_names)
+        K_file = npy_dir+'K_'+str(sub_in)+'.npy'
+        R_file = npy_dir+'R_'+str(sub_in)+'.npy'
+        np.save(K_file,K)
+        np.save(R_file,R)
+        Phi_file = phi_dir+'Phi_'+str(sub_in)
+        print('Saving ground truth feature vector')
+        with open(Phi_file, 'wb') as fp:  
+            pickle.dump(Phi_gt, fp)
     
 def window3D(w):
     # Convert a 1D filter kernel to 3D

@@ -51,7 +51,7 @@ roi_path = '/data/Ali/atlas/mcgill_pd_atlas/PD25-subcortical-labels.csv'
 # pool = Pool(os.cpu_count()-5)
 # results = pool.starmap(extract,packet)
 
-packet = [*zip(qsms[61:],segs[61:],[npy_dir]*len(case_id[61:]),[phi_dir]*len(case_id[61:]),[roi_path]*len(case_id[61:]),case_id[61:],[suffix]*len(case_id[61:])),True]
+packet = [*zip(qsms[:],segs[:],[npy_dir]*len(case_id[:]),[phi_dir]*len(case_id[:]),[roi_path]*len(case_id[:]),case_id[:],[suffix]*len(case_id[:]),[True]*len(case_id[:]))]
 pool = Pool(os.cpu_count()-5)
 results = pool.starmap(extract,packet)
 
