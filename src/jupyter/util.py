@@ -480,6 +480,14 @@ def rad_smogn(X_t,y,yo1,yu,Rmo,Rmu,t,p):
     print('After rescaling, SMOGN mean is',X_smogn[:,:-1].mean(),'standard deviation is',X_smogn[:,:-1].std())
     return X_smogn,y_smogn#,idx_kept#,sscaler
 
+def kl_divergence(p, q):
+    return np.sum(np.where(p!=0,p*np.log(p/q),0))
+
+def make_pdfs(Q,P,N):
+    x = np.arange(np.min((np.min(Q),np.min(P))), np.max((np.max(Q),np.max(P))),1/N)
+    p = stats.norm.pdf(x, np.mean(P), np.std(P))
+    q = stats.norm.pdf(x, np.mean(Q), np.std(Q))
+    return p,q
 
 def calc_entropy(s):
     P = [n_x[1]/len(s) for n_x in collections.Counter(s).items()]
