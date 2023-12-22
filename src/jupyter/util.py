@@ -300,44 +300,76 @@ def k_crop(im,factor,win):
     plt.imshow(im_k[:,:,(cz//2)-10])
     return im_k
 
-def load_featstruct(phi_directory,X_directory,R_directory,K_directory,n_rois,n_features):
+def load_featstruct(phi_directory,X_directory,R_directory,K_directory,n_rois,n_features,slices):
     # Initialize output arrays
     Phi_all = []
     ID_all = []
+    slice_id = []
     # Convert directories to lists
-    phi_directory_struct = os.listdir(phi_directory)
-    X_directory_struct  = os.listdir(X_directory)
-    R_directory_struct  = os.listdir(R_directory)
-    K_directory_struct  = os.listdir(K_directory)
+    phi_directory_struct = sorted(os.listdir(phi_directory))
+    X_directory_struct  = sorted(os.listdir(X_directory))
+    R_directory_struct  = sorted(os.listdir(R_directory))
+    K_directory_struct  = sorted(os.listdir(K_directory))
     # Load feature dictionary
     for feature_matrix in phi_directory_struct:
         with open(phi_directory+feature_matrix, "rb") as fp:  
-            Phi_case = pickle.load(fp)
-            Phi_all.append(Phi_case)
-            ID_all.append(feature_matrix[-2:])
-    n_cases = len(ID_all)
-    X_all = np.zeros((n_cases,n_rois,n_features))
-    R_all = np.zeros((n_cases,n_rois,n_features)).astype(str)
-    K_all = np.zeros((n_cases,n_rois,n_features)).astype(str)
+            if slices == True:
+                ID_all.append(feature_matrix[-6:-4])
+                slice_id.append(feature_matrix[-6:])
+                if np.mod(len(ID_all),1000) == 0:
+                    print('Appended',str(len(ID_all)),'slices')
+            else:
+                Phi_case = pickle.load(fp)
+                Phi_all.append(Phi_case)
+                ID_all.append(feature_matrix[-2:])
+        n_cases = len(ID_all)
+
+    if slices == True:
+        X_all = np.zeros((n_cases,n_rois,n_features))
+        R_all = np.zeros((n_cases,n_rois,n_features)).astype(str)
+        K_all = np.zeros((n_cases,n_rois,n_features)).astype(str)
+    else:
+        X_all = np.zeros((n_cases,n_rois,n_features))
     # Load feature arrays
     count = 0
+    print('Allocated arrays')
     for feature_array in X_directory_struct:
-        X_case = np.load(X_directory+feature_array)
-        X_all[count,:,:] = X_case.reshape((n_rois,n_features)).transpose((0,1))
-        count = count+1
+        try:
+            X_case = np.load(X_directory+feature_array,allow_pickle=True)
+            print('Loading',X_directory+feature_array,str(X_case.shape))
+            feature_key = 'K_'+feature_array[4:]
+            K_case = np.load(K_directory+feature_key)
+            feature_roi = 'R_'+feature_array[4:]
+            R_case = np.load(R_directory+feature_roi)
+            slice_roi = len(np.unique(R_case))
+            if slice_roi == 6:
+                X_all[count,:,:] = X_case.reshape((slice_roi,K_case.shape[0])).transpose((0,1))
+            count = count+1
+        except:
+            print('Failed to load',X_directory+feature_array)
+        n_features = K_case.shape[0]
     # Load ROI indices
     count = 0
-    for feature_roi in R_directory_struct:
-        R_case = np.load(R_directory+feature_roi)
-        R_all[count,:,:] = R_case.reshape((n_rois,n_features)).transpose((0,1))
-        count = count+1
-    # Load key indices
-    count = 0
-    for feature_key in K_directory_struct:
-        K_case = np.load(K_directory+feature_key)
-        K_all[count,:,:] = K_case.reshape((n_rois,n_features)).transpose((0,1))
-        count = count+1
+    print('Created feature matrix')
+    if slices == False:
+        for feature_roi in R_directory_struct:
+            R_case = np.load(R_directory+feature_roi)
+            R_all[count,:,:] = R_case.reshape((n_rois,n_features)).transpose((0,1))
+            count = count+1
+        # Load key indices
+        count = 0
+        print('Created ROI matrix')
+        for feature_key in K_directory_struct:
+            K_case = np.load(K_directory+feature_key)
+            K_all[count,:,:] = K_case.reshape((n_rois,n_features)).transpose((0,1))
+            count = count+1
+        print('Created feature label matrix')
+    else:
+        Phi_all = 0
+        R_all = 0
+        K_all = 0
     return Phi_all, X_all, R_all, K_all, ID_all
+
 
 def filter_scores(file_path,score,key,ids):
     df = pd.read_csv(file_path)
