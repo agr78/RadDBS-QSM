@@ -18,6 +18,7 @@ import logging
 import pandas as pd
 from sklearn.linear_model import Lasso
 import sklearn.model_selection as sms
+import scipy
 from scipy.stats import linregress
 import sklearn.preprocessing as skp
 import smogn
@@ -318,34 +319,42 @@ def load_featstruct(phi_directory,X_directory,R_directory,K_directory,n_rois,n_f
                 ID_all.append(feature_matrix[-2:])
         n_cases = len(ID_all)
 
-    if slices == True:
+    if slices == False:
         X_all = np.zeros((n_cases,n_rois,n_features))
         R_all = np.zeros((n_cases,n_rois,n_features)).astype(str)
         K_all = np.zeros((n_cases,n_rois,n_features)).astype(str)
     else:
         X_all = np.zeros((n_cases,n_rois,n_features))
-    # Load feature arrays
-    count = 0
-    print('Allocated arrays')
-    for feature_array in X_directory_struct:
-        try:
-            X_case = np.load(X_directory+feature_array,allow_pickle=True)
-            print('Loading',X_directory+feature_array,str(X_case.shape))
-            feature_key = 'K_'+feature_array[4:]
-            K_case = np.load(K_directory+feature_key)
-            feature_roi = 'R_'+feature_array[4:]
-            R_case = np.load(R_directory+feature_roi)
-            slice_roi = len(np.unique(R_case))
-            if slice_roi == 6:
-                X_all[count,:,:] = X_case.reshape((slice_roi,K_case.shape[0])).transpose((0,1))
-            count = count+1
-        except:
-            print('Failed to load',X_directory+feature_array)
-        n_features = K_case.shape[0]
-    # Load ROI indices
-    count = 0
-    print('Created feature matrix')
+        # Load feature arrays
+        count = 0
+        print('Allocated arrays')
+        for feature_array in X_directory_struct:
+            try:
+                X_case = np.load(X_directory+feature_array,allow_pickle=True)
+                print('Loading',X_directory+feature_array,str(X_case.shape))
+                feature_key = 'K_'+feature_array[4:]
+                K_case = np.load(K_directory+feature_key)
+                feature_roi = 'R_'+feature_array[4:]
+                R_case = np.load(R_directory+feature_roi)
+                slice_roi = len(np.unique(R_case))
+                if slice_roi == 6:
+                    X_all[count,:,:] = X_case.reshape((slice_roi,K_case.shape[0])).transpose((0,1))
+                count = count+1
+            except:
+                print('Failed to load',X_directory+feature_array)
+            n_features = K_case.shape[0]
+
     if slices == False:
+        # Load features
+        count = 0
+        for feature_matrix in X_directory_struct:
+            X_case = np.load(X_directory+feature_matrix)
+            X_all[count,:,:] = X_case.reshape((n_rois,n_features)).transpose((0,1))
+            count = count+1
+        # Load ROI indices
+        count = 0
+        print('Created feature matrix')
+        print('Created ROI matrix')
         for feature_roi in R_directory_struct:
             R_case = np.load(R_directory+feature_roi)
             R_all[count,:,:] = R_case.reshape((n_rois,n_features)).transpose((0,1))
@@ -485,8 +494,8 @@ def kl_divergence(p, q):
 
 def make_pdfs(Q,P,N):
     x = np.arange(np.min((np.min(Q),np.min(P))), np.max((np.max(Q),np.max(P))),1/N)
-    p = stats.norm.pdf(x, np.mean(P), np.std(P))
-    q = stats.norm.pdf(x, np.mean(Q), np.std(Q))
+    p = scipy.stats.norm.pdf(x, np.mean(P), np.std(P))
+    q = scipy.stats.norm.pdf(x, np.mean(Q), np.std(Q))
     return p,q
 
 def calc_entropy(s):
@@ -537,7 +546,7 @@ def model_scale(scaler_type,X_train,train_index,X_test,test_index,pre_metric):
     X_test_in = scale_feature_matrix(X_test,pre_metric[test_index],scaler)
     return X0_tt,scaler,X_test_in
 
-def gridsearch_pickparams(model,cvn,param_grid,scaler_type,X_train,train_index,X_test,test_index,pre_metric,y_train,scoring,n_js):
+def gridsearch_pickparams(model,cvn,param_grid,X0_tt,y_train,scoring,n_js):
     gsc = sms.GridSearchCV(
         model,
         param_grid,
@@ -546,8 +555,9 @@ def gridsearch_pickparams(model,cvn,param_grid,scaler_type,X_train,train_index,X
         verbose=10,
         n_jobs=n_js,
         return_train_score=True,
+        error_score='raise',
         refit=False)
-    X0_tt,scaler,X_test_in = model_scale(scaler_type,X_train,train_index,X_test,test_index,pre_metric)
+    # X0_tt,scaler,X_test_in = model_scale(scaler_type,X_train,train_index,X_test,test_index,pre_metric)
     grid_result = gsc.fit(X0_tt,y_train)
     best_params = grid_result.best_params_
     return best_params
