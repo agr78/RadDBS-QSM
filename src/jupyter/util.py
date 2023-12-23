@@ -182,12 +182,12 @@ def extract(qsm,seg,npy_dir,phi_dir,roi_path,sub_in,suffix,slices):
         npy_dir = npy_dir+'/slices/'
         phi_dir = phi_dir+'/slices/'
         for i in np.arange(seg.shape[2]):
+            x_row_gt = []
             if np.sum(seg[:,:,i])>1:
                 seg_sitk = sitk.GetImageFromArray(seg[:,:,i])
                 seg_sitk.SetSpacing(voxel_size)
                 qsm_sitk_gt = sitk.GetImageFromArray(qsm[:,:,i])
                 qsm_sitk_gt.SetSpacing(voxel_size)
-                print('Evaluating slice',str(i),'on case',str(sub_in))
                 # Generate feature structure Phi from all ROIs and all cases
                 extractor = featureextractor.RadiomicsFeatureExtractor()
                 extractor.enableAllFeatures()
@@ -197,6 +197,7 @@ def extract(qsm,seg,npy_dir,phi_dir,roi_path,sub_in,suffix,slices):
                 seg_labels_all = np.unique(seg[:,:,i])
                 for j in seg_labels_all:
                     if 0.0 < j < 7.0:
+                        print('Evaluating slice',str(i),'on case',str(sub_in))
                         seg_slice = np.asarray(seg[:,:,i])
                         if (np.sum(seg_slice==j) > 1) and (np.max(np.sum((seg_slice==j),axis=0)) > 1) and (np.max(np.sum((seg_slice==j),axis=1)) > 1):
                             fv_count = 0
@@ -226,6 +227,7 @@ def extract(qsm,seg,npy_dir,phi_dir,roi_path,sub_in,suffix,slices):
                 R_file = npy_dir+'R_'+str(sub_in)+'_'+str(i)+'.npy'
                 np.save(K_file,K)
                 np.save(R_file,R)
+                print('Saving feature vectors of size',str(X0_gt.shape))
                 Phi_file = phi_dir+'Phi_'+str(sub_in)+'_'+str(i)
                 with open(Phi_file, 'wb') as fp:  
                     pickle.dump(Phi_gt, fp)
