@@ -18,6 +18,7 @@ import logging
 import pandas as pd
 from sklearn.linear_model import Lasso
 import sklearn.model_selection as sms
+import sklearn.preprocessing as skp
 import scipy
 from scipy.stats import linregress
 import sklearn.preprocessing as skp
@@ -309,41 +310,41 @@ def load_featstruct(phi_directory,X_directory,R_directory,K_directory,n_rois,n_f
     for feature_matrix in phi_directory_struct:
         with open(phi_directory+feature_matrix, "rb") as fp:  
             if slices == True:
-                ID_all.append(feature_matrix[-6:-4])
+                if len(feature_matrix) == 10:
+                    ID_all.append(feature_matrix[-6:-4])
+                else:
+                    ID_all.append(feature_matrix[-5:-3])
                 slice_id.append(feature_matrix[-6:])
                 if np.mod(len(ID_all),1000) == 0:
                     print('Appended',str(len(ID_all)),'slices')
+                Phi_all = []
             else:
                 Phi_case = pickle.load(fp)
                 Phi_all.append(Phi_case)
                 ID_all.append(feature_matrix[-2:])
-        n_cases = len(ID_all)
-
-    if slices == False:
-        X_all = np.zeros((n_cases,n_rois,n_features))
-        R_all = np.zeros((n_cases,n_rois,n_features)).astype(str)
-        K_all = np.zeros((n_cases,n_rois,n_features)).astype(str)
-    else:
-        X_all = np.zeros((n_cases,n_rois,n_features))
-        # Load feature arrays
-        count = 0
-        print('Allocated arrays')
+    n_cases = len(np.asarray(ID_all))
+    X_all = np.zeros((n_cases,n_rois,n_features))
+    R_all = np.zeros((n_cases,n_rois,n_features)).astype(str)
+    K_all = np.zeros((n_cases,n_rois,n_features)).astype(str)
+    # Load feature arrays
+    count = 0
+    print('Allocated arrays')
+    if slices == True:
         for feature_array in X_directory_struct:
-            try:
-                X_case = np.load(X_directory+feature_array,allow_pickle=True)
-                print('Loading',X_directory+feature_array,str(X_case.shape))
-                feature_key = 'K_'+feature_array[4:]
-                K_case = np.load(K_directory+feature_key)
-                feature_roi = 'R_'+feature_array[4:]
-                R_case = np.load(R_directory+feature_roi)
-                slice_roi = len(np.unique(R_case))
-                if slice_roi == 6:
-                    X_all[count,:,:] = X_case.reshape((slice_roi,K_case.shape[0])).transpose((0,1))
-                count = count+1
-            except:
-                print('Failed to load',X_directory+feature_array)
-            n_features = K_case.shape[0]
-
+            #try:
+            X_case = np.load(X_directory+feature_array,allow_pickle=True)
+            feature_key = 'K_'+feature_array[4:]
+            K_case = np.load(K_directory+feature_key)
+            feature_roi = 'R_'+feature_array[4:]
+            R_case = np.load(R_directory+feature_roi)
+            slice_roi = len(np.unique(R_case))
+            if slice_roi == 6:
+                X_all[count,:,:] = X_case.reshape((slice_roi,n_features)).transpose((0,1))
+                R_all = []
+                K_all = []
+            count = count+1
+            #except:
+            #    print('Failed to load',X_directory+feature_array)
     if slices == False:
         # Load features
         count = 0
@@ -354,7 +355,6 @@ def load_featstruct(phi_directory,X_directory,R_directory,K_directory,n_rois,n_f
         # Load ROI indices
         count = 0
         print('Created feature matrix')
-        print('Created ROI matrix')
         for feature_roi in R_directory_struct:
             R_case = np.load(R_directory+feature_roi)
             R_all[count,:,:] = R_case.reshape((n_rois,n_features)).transpose((0,1))
@@ -368,9 +368,7 @@ def load_featstruct(phi_directory,X_directory,R_directory,K_directory,n_rois,n_f
             count = count+1
         print('Created feature label matrix')
     else:
-        Phi_all = 0
-        R_all = 0
-        K_all = 0
+        next
     return Phi_all, X_all, R_all, K_all, ID_all
 
 
@@ -439,6 +437,12 @@ def make_feature_matrix(X_all_c,pre_metric,scaler):
     X = scaler.transform(X)
     return X, scaler
 
+def model_scale(scaler_type,X_train,train_index,X_test,test_index,pre_metric):
+    scaler = scaler_type
+    X0_tt,scaler = make_feature_matrix(X_train,pre_metric[train_index],scaler)
+    X_test_in = scale_feature_matrix(X_test,pre_metric[test_index],scaler)
+    return X0_tt,scaler,X_test_in
+
 def scale_feature_matrix(X_test,pre_metric_test,scaler):
     X = np.zeros((X_test.shape[0],X_test.shape[1],X_test.shape[2]+1))
     X[:,:,:-1] = X_test
@@ -448,45 +452,46 @@ def scale_feature_matrix(X_test,pre_metric_test,scaler):
     X = X.reshape(X_test.shape[0],X_test.shape[1],X_test.shape[2]+1)
     return X
 
-def rad_smogn(X_t,y,yo1,yu,Rmo,Rmu,t,p):
+def rad_smogn(X_t,y_t,yo1,yu,Rmo,Rmu,t,p):
     warnings.simplefilter(action='ignore', category=pd.errors.PerformanceWarning)
     warnings.simplefilter(action='ignore', category=RuntimeWarning)
     # Create data frame for SMOGN generation
-    n_cases = len(y)
-    D = pd.DataFrame(np.hstack((X_t,(np.asarray(y).reshape(n_cases,1)))))
+    n_cases = len(y_t)
+    D = pd.DataFrame(np.hstack((X_t,(np.asarray(y_t).reshape(n_cases,1)))))
     for col in D.columns:
         D.rename(columns={col:str(col)},inplace=True)
     # Specify phi relevance values
     Rm = [[yo1,  Rmo,    0],  
           [yu,   Rmu,    0]]
-    d = len(D.columns)
-    yi = pd.DataFrame(D[str(d-1)])
-    # Pre-index targets
-    idx = pd.Index((yi.values).ravel())
-    # Get sorted indices
-    idx = idx.sort_values(return_indexer=True)
-    # Sort targets in ascending order
-    y_sort = yi.sort_values(by=str(d-1))
-    y_sort = y_sort[str(d-1)]
-    # Generate relevance function
-    phi_params = phi_ctrl_pts(y = y_sort,
-        method = 'manual',                                
-        ctrl_pts = Rm)
-    y_phi = phi(y = y_sort,              
-    ctrl_pts = phi_params)
-    # Verify sample size reduction
-    N_us = np.sum(np.asarray(y_phi)>t)
-    idx_kept = (np.asarray(y_phi)<=t)*(idx[1]+1) > 0
+    
+    # d = len(D.columns)
+    # yi = pd.DataFrame(D[str(d-1)])
+    # # Pre-index targets
+    # idx = pd.Index((yi.values).ravel())
+    # # Get sorted indices
+    # idx = idx.sort_values(return_indexer=True)
+    # # Sort targets in ascending order
+    # y_sort = yi.sort_values(by=str(d-1))
+    # y_sort = y_sort[str(d-1)]
+    # # Generate relevance function
+    # phi_params = phi_ctrl_pts(y = y_sort,
+    #     method = 'manual',                                
+    #     ctrl_pts = Rm)
+    # y_phi = phi(y = y_sort,              
+    # ctrl_pts = phi_params)
+    # # Verify sample size reduction
+    # N_us = np.sum(np.asarray(y_phi)>t)
+    # idx_kept = (np.asarray(y_phi)<=t)*(idx[1]+1) > 0
     # Conduct SMOGN
-    print('Prior to SMOGN sampling, mean is',X_t.mean(),'standard deviation is',X_t.std())
-    X_smogn = smogn.smoter(data = D, y = str(D.columns[-1]),rel_method='manual',rel_ctrl_pts_rg = Rm,rel_thres=t,pert=p)
+    # print('Prior to SMOGN sampling, mean is',X_t.mean(),'standard deviation is',X_t.std())
+    X_smogn = smogn.smoter(data = D, y = str(D.columns[-1]),
+                           rel_method='manual',rel_ctrl_pts_rg = Rm,pert=0.002)
+    #print('After SMOGN sampling, mean is',X_smogn[:,:-1].mean(),'standard deviation is',X_smogn[:,:-1].std())
+    y_smogn = np.asarray(X_smogn)[:,-1]
     X_smogn = np.asarray(X_smogn)[:,:-1]
-    print(X_smogn.shape)
-    print('After SMOGN sampling, mean is',X_smogn[:,:-1].mean(),'standard deviation is',X_smogn[:,:-1].std())
-    y_smogn = X_smogn[:,-1]
-    #sscaler = StandardScaler()
-    #X_smogn = sscaler.fit_transform(X_smogn)
-    print('After rescaling, SMOGN mean is',X_smogn[:,:-1].mean(),'standard deviation is',X_smogn[:,:-1].std())
+    # sscaler = skp.StandardScaler()
+    # X_smogn = sscaler.fit_transform(X_smogn)
+    # print('After rescaling, or lackthereof, SMOGN mean is',X_smogn[:,:-1].mean(),'standard deviation is',X_smogn[:,:-1].std())
     return X_smogn,y_smogn#,idx_kept#,sscaler
 
 def kl_divergence(p, q):
@@ -539,12 +544,6 @@ def eval_prediction(results,y_test,names,fig_size):
         ax = np.reshape(ax, (2, int(n_models/2)))
     plt.style.use('default')
     plt.show
-
-def model_scale(scaler_type,X_train,train_index,X_test,test_index,pre_metric):
-    scaler = scaler_type
-    X0_tt,scaler = make_feature_matrix(X_train,pre_metric[train_index],scaler)
-    X_test_in = scale_feature_matrix(X_test,pre_metric[test_index],scaler)
-    return X0_tt,scaler,X_test_in
 
 def gridsearch_pickparams(model,cvn,param_grid,X0_tt,y_train,scoring,n_js):
     gsc = sms.GridSearchCV(
