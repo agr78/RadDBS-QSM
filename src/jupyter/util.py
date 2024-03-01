@@ -6,9 +6,7 @@ import numpy as np
 from numpy import matlib as mb
 import SimpleITK as sitk
 from tqdm import tqdm
-import multiprocessing
 from radiomics import featureextractor 
-import time
 from joblib import Parallel, delayed
 import pandas as pd
 import os
@@ -19,9 +17,9 @@ import pandas as pd
 from sklearn.linear_model import Lasso
 import sklearn.model_selection as sms
 import sklearn.preprocessing as skp
+from sklearn.neighbors import NearestNeighbors
 import scipy
 from scipy.stats import linregress
-import sklearn.preprocessing as skp
 import smogn
 from smogn.phi import phi
 from smogn.phi_ctrl_pts import phi_ctrl_pts
@@ -30,7 +28,8 @@ import sys
 import collections
 import math
 import nibabel as nib
-
+import torch
+from PIL import Image
 
 def blockPrint():
     sys.stdout = open(os.devnull, 'w')
@@ -169,7 +168,10 @@ def imfeat_plotter(Mc_lrs,Mi_lrs,Mc_vds,Kcs,R_rs,lower_idx,upper_idx,title_strin
     plt.colorbar(cax, cax=caxf, orientation='vertical',ticks=[0, 0.5, 1])
     plt.show()
 
-def extract(qsm,seg,npy_dir,phi_dir,roi_path,sub_in,suffix,slices):
+def extract(qsm,seg,npy_dir,phi_dir,roi_path,sub_in,suffix,slices,mask_erode):
+    if ~isinstance(qsm, np.ndarray):
+        qsm = nib.load(qsm).get_fdata()
+        seg = nib.load(seg).get_fdata()
     logger = logging.getLogger("radiomics")
     logger.setLevel(logging.ERROR)
     fv_count = 0
@@ -180,6 +182,9 @@ def extract(qsm,seg,npy_dir,phi_dir,roi_path,sub_in,suffix,slices):
     roilib = []
     roi_names = []
     voxel_size = ((0.5,0.5,0.5))
+    if mask_erode == True:
+        seg_labels = seg
+        seg = scipy.ndimage.morphology.binary_erosion(seg_labels)*seg_labels
     if slices == True:
         npy_dir = npy_dir+'/slices/'
         phi_dir = phi_dir+'/slices/'
@@ -214,21 +219,29 @@ def extract(qsm,seg,npy_dir,phi_dir,roi_path,sub_in,suffix,slices):
                                     roilib.append(j)
                                     mask = np.row_stack([roi_df[int(row)].str.contains(str(int(roilib[-1])), na = False) for row in roi_df])
                                     roi_names.append(np.asarray(roi_df.iloc[mask.any(axis=0),1])[0])
-                            fv_count = fv_count+1
+                            #fv_count = fv_count+1
                             print('Extracting features for subject',sub_in,
                                 'ROI',j,'and appending feature matrix with vector of length',
                                 fv_count)
                 # Convert each row to numpy array
                 X0_gt = np.array(x_row_gt)
-                npy_file = npy_dir+'X_'+suffix+str(sub_in)+'_'+str(i)+'.npy'
-                np.save(npy_file,X0_gt)
+                if mask_erode == True:
+                    npy_file = npy_dir+'X_e_'+suffix+str(sub_in)+'_'+str(i)+'.npy'
+                    Phi_file = phi_dir+'Phi_e'+str(sub_in)+'_'+str(i)
+                    K_file = npy_dir+'K_e'+str(sub_in)+'_'+str(i)+'.npy'
+                    R_file = npy_dir+'R_e'+str(sub_in)+'_'+str(i)+'.npy'
+                else:
+                    npy_file = npy_dir+'X_'+suffix+str(sub_in)+'_'+str(i)+'.npy'
+                    Phi_file = phi_dir+'Phi_'+str(sub_in)+'_'+str(i)
+                    K_file = npy_dir+'K_'+str(sub_in)+'_'+str(i)+'.npy'
+                    R_file = npy_dir+'R_'+str(sub_in)+'_'+str(i)+'.npy'
+               
                 K = np.asarray(keylib)
                 R = np.asarray(roi_names)
-                K_file = npy_dir+'K_'+str(sub_in)+'_'+str(i)+'.npy'
-                R_file = npy_dir+'R_'+str(sub_in)+'_'+str(i)+'.npy'
+                np.save(npy_file,X0_gt)
                 np.save(K_file,K)
                 np.save(R_file,R)
-                Phi_file = phi_dir+'Phi_'+str(sub_in)+'_'+str(i)
+                
                 with open(Phi_file, 'wb') as fp:  
                     pickle.dump(Phi_gt, fp)
     else:
@@ -247,7 +260,7 @@ def extract(qsm,seg,npy_dir,phi_dir,roi_path,sub_in,suffix,slices):
             if 0 < j < 7:
                 fv_count = 0
                 featureVector_gt = extractor.execute(qsm_sitk_gt,seg_sitk,label=int(j));
-                Phi_gt.append(featureVector_gt)
+                # Phi_gt.append(featureVector_gt)
                 for key, value in six.iteritems(featureVector_gt):
                     if 'diagnostic' in key:
                         next
@@ -264,18 +277,24 @@ def extract(qsm,seg,npy_dir,phi_dir,roi_path,sub_in,suffix,slices):
                     fv_count)
         # Convert each row to numpy array
         X0_gt = np.array(x_row_gt)
-        npy_file = npy_dir+'X_'+suffix+str(sub_in)+'.npy'
-        np.save(npy_file,X0_gt)
         K = np.asarray(keylib)
         R = np.asarray(roi_names)
-        K_file = npy_dir+'K_'+str(sub_in)+'.npy'
-        R_file = npy_dir+'R_'+str(sub_in)+'.npy'
+        if mask_erode == True:
+            npy_file = npy_dir+'X_e_'+suffix+str(sub_in)+'.npy'
+            Phi_file = phi_dir+'Phi_e'+str(sub_in)
+            K_file = npy_dir+'K_e'+str(sub_in)+'.npy'
+            R_file = npy_dir+'R_e'+str(sub_in)+'.npy'
+        else:
+            npy_file = npy_dir+'X_'+suffix+str(sub_in)+'.npy'
+            Phi_file = phi_dir+'Phi_'+str(sub_in)
+            K_file = npy_dir+'K_'+str(sub_in)+'.npy'
+            R_file = npy_dir+'R_'+str(sub_in)+'.npy'
+        np.save(npy_file,X0_gt)
         np.save(K_file,K)
         np.save(R_file,R)
-        Phi_file = phi_dir+'Phi_'+str(sub_in)
         print('Saving feature vectors of size',str(X0_gt.shape))
-        with open(Phi_file, 'wb') as fp:  
-            pickle.dump(Phi_gt, fp)
+        # with open(Phi_file, 'wb') as fp:  
+        #     pickle.dump(Phi_gt, fp)
     
 def window3D(w):
     # Convert a 1D filter kernel to 3D
@@ -330,6 +349,7 @@ def load_featstruct(phi_directory,X_directory,R_directory,K_directory,n_rois,n_f
     count = 0
     print('Allocated arrays')
     if slices == True:
+        X_out = []
         for feature_array in X_directory_struct:
             #try:
             X_case = np.load(X_directory+feature_array,allow_pickle=True)
@@ -339,10 +359,10 @@ def load_featstruct(phi_directory,X_directory,R_directory,K_directory,n_rois,n_f
             R_case = np.load(R_directory+feature_roi)
             slice_roi = len(np.unique(R_case))
             if slice_roi == 6:
-                X_all[count,:,:] = X_case.reshape((slice_roi,n_features)).transpose((0,1))
+                X_out.append(X_case.reshape((slice_roi,n_features)).transpose((0,1)))
                 R_all = []
                 K_all = []
-            count = count+1
+        X_all = X_out
             #except:
             #    print('Failed to load',X_directory+feature_array)
     if slices == False:
@@ -371,54 +391,189 @@ def load_featstruct(phi_directory,X_directory,R_directory,K_directory,n_rois,n_f
         next
     return Phi_all, X_all, R_all, K_all, ID_all
 
+def slice_pick(subsc,per_change,pre_metric,pre_comp,pshape,roi_l,roi_u,mask_crop_output,mask_output,o_index,file_path,qsm_path,seg_prefix,save_image,img_directory,visualize,reload):
+    qsms = full_path(qsm_path)
+    writer = sitk.ImageFileWriter()
+    qsms_subs = []
+    X_img = []
+    seg_prefix_dd = seg_prefix[:-1]
+    if reload == True:
+        for Q in np.arange(len(qsms)):
+            qsms_subs.append(int(qsms[Q][-9:-7]))
 
-def filter_scores(file_path,score,key,ids):
+        for j in np.arange(len(subsc)):
+            q = np.where(qsms_subs==subsc[j])[0][0]
+            data = nib.load(qsms[q])
+            try:
+                if qsms_subs[q] < 10:
+                    mask = nib.load(seg_prefix+str(qsms_subs[q])+'.nii.gz').get_fdata()
+                else:
+                    mask = nib.load(seg_prefix_dd+str(qsms_subs[q])+'.nii.gz').get_fdata()
+                mask[mask > roi_u] = 0
+                mask[mask < roi_l] = 0
+                maskc = pad_to(mask_crop(mask,mask),pshape[0],pshape[1],pshape[2])
+                mask_k = []
+                k_all = []
+                if mask_crop_output == True:
+                    if mask_output == True:
+                        data = pad_to(mask_crop(mask*data.get_fdata(),mask),pshape[0],pshape[1],pshape[2])
+                    else:
+                        data = pad_to(mask_crop(data.get_fdata(),mask),pshape[0],pshape[1],pshape[2])
+                    for k in np.arange(maskc.shape[2]):
+                        if np.sum(maskc[:,:,k]) > 0:
+                            mask_k.append(np.sum(maskc[:,:,k]))
+                            k_all.append(k)
+                else:
+                    data = crop_to(data.get_fdata(),pshape[0],pshape[1],pshape[2])
+                    if o_index == True:
+                        for k in np.arange(mask.shape[2]):
+                            if np.sum(mask[:,:,k]) > 0:
+                                mask_k.append(np.sum(mask[:,:,k]))
+                                k_all.append(k)
+                    else:
+                        for k in np.arange(maskc.shape[2]):
+                            if np.sum(maskc[:,:,k]) > 0:
+                                mask_k.append(np.sum(maskc[:,:,k]))
+                                k_all.append(k)
+                        
+
+                img = data[:,:,k_all[np.argmax(mask_k)]]
+                if save_image == True:
+                    img_sitk =  sitk.Cast(sitk.GetImageFromArray(img),sitk.UInt32)
+                    writer.SetFileName(str((img_directory)+'X_img_'+str(j)+'.png'))
+                    writer.Execute(img_sitk)
+                X_img.append(torch.Tensor(img).cuda())
+
+                print('Maximum volume found at slice',str(k_all[np.argmax(mask_k)]),'for case',str(qsms_subs[q]))
+                if visualize == True:
+                    plt.imshow(img)
+                    plt.show()
+            except:
+                print('Missing mask at',str(qsms_subs[q]))
+                subsc = np.delete(subsc,j)
+                per_change = np.delete(per_change,j)
+                pre_metric = np.delete(pre_metric,j)
+                pre_comp = np.delete(pre_comp,j)
+            
+        torch.save(X_img,file_path) 
+    else:
+        X_img = torch.load(file_path)
+        subsc = []
+        per_change = []
+        pre_metric = []
+        pre_comp = []
+    return X_img, subsc, per_change, pre_metric, pre_comp
+
+
+
+def filter_scores(file_path,score,key,dose,ids):
     df = pd.read_csv(file_path)
     dfd = df.copy()
+    print(dfd)
     # Drop blank columns
-    for (columnName, columnData) in dfd.iteritems():
-        if columnData.isnull().all():
-            print('Dropping NaN column at',columnName)
-            dfd.drop(columnName,axis=1,inplace=True)
-    # Add relevant column names from headers
-    for (columnName, columnData) in dfd.iteritems():
-            dfd.rename(columns={columnName:columnName+': '+columnData.values[0]},inplace=True)
+    try:
+        for (columnName, columnData) in dfd.iteritems():
+            if columnData.isnull().all():
+                print('Dropping NaN column at',columnName)
+                dfd.drop(columnName,axis=1,inplace=True)
+        # Add relevant column names from headers
+        for (columnName, columnData) in dfd.iteritems():
+                dfd.rename(columns={columnName:columnName+': '+columnData.values[0]},inplace=True)
+    except:
+        for (columnName, columnData) in dfd.items():
+            if columnData.isnull().all():
+                print('Dropping NaN column at',columnName)
+                dfd.drop(columnName,axis=1,inplace=True)
+        # Add relevant column names from headers
+        for (columnName, columnData) in dfd.items():
+                dfd.rename(columns={columnName:columnName+': '+columnData.values[0]},inplace=True)
     def drop_prefix(self, prefix):
         self.columns = self.columns.str.lstrip(prefix)
         return self
     pd.core.frame.DataFrame.drop_prefix = drop_prefix
-    dfd.drop_prefix('Unnamed:')        
-    for (columnName, columnData) in dfd.iteritems():
-        if columnName[1].isdigit():
-            dfd.rename(columns={columnName:columnName[4:]},inplace=True)
-    # Make a copy for motor symptoms
-    motor_df = dfd.copy()
-    # Drop non-motor (III) columns
-    for (columnName, columnData) in motor_df.iteritems():
-        if score in columnName:
-            next
-        elif key in columnName:
-            next
-        elif ids in columnName:
-            next
-        else:
-            motor_df.drop(columnName,axis=1,inplace=True)
+    dfd.drop_prefix('Unnamed:')      
+    try:  
+        for (columnName, columnData) in dfd.iteritems():
+            if columnName[1].isdigit():
+                dfd.rename(columns={columnName:columnName[4:]},inplace=True)
+        # Make a copy for motor symptoms
+        motor_df = dfd.copy()
+        # Drop non-motor (III) columns
+        for (columnName, columnData) in motor_df.iteritems():
+            if score in columnName:
+                next
+            elif key in columnName:
+                next
+            elif dose in columnName:
+                next
+            elif ids in columnName:
+                next
+            else:
+                motor_df.drop(columnName,axis=1,inplace=True)
+    except:
+        for (columnName, columnData) in dfd.items():
+            if columnName[1].isdigit():
+                dfd.rename(columns={columnName:columnName[4:]},inplace=True)
+        # Make a copy for motor symptoms
+        motor_df = dfd.copy()
+        # Drop non-motor (III) columns
+        for (columnName, columnData) in motor_df.items():
+            if score in columnName:
+                next
+            elif key in columnName:
+                next            
+            elif dose in columnName:
+                next
+            elif ids in columnName:
+                next
+            else:
+                motor_df.drop(columnName,axis=1,inplace=True)
     # Drop subheader
     motor_df = motor_df.tail(-1)
     motor_df = motor_df.replace('na',np.nan)
     return motor_df
 
-def get_full_cases(df,h0,h1,h2,h3):
+def get_full_cases(df,h0,h1,h2,h3,h4):
     h0a = pd.to_numeric(df[h0],errors='coerce').to_numpy().astype('float')
     h1a = df[h1].to_numpy().astype('float')
     h2a = df[h2].to_numpy().astype('float')
     h3a = df[h3].to_numpy().astype('float')
-    idx = ~np.isnan(h3a+h2a+h1a+h0a)
+    print(df)
+    h4a = df[h4].to_numpy().astype('float')
+    idx = ~np.isnan(h4a+h3a+h2a+h1a+h0a)
     subs = h0a[idx]
     pre_updrs_off = h1a[idx]
     pre_imp = (h1a[idx]-h2a[idx])/h1a[idx]
     true_imp = (h1a[idx]-h3a[idx])/h1a[idx]
-    return subs, pre_imp, true_imp, pre_updrs_off
+    ledd = h4a[idx]
+    return subs, pre_imp, true_imp, pre_updrs_off, ledd
+
+def re_index(X_all,K_all,R_all,c_cases_idx,subs,ids,all_rois,pre_imp,pre_updrs_off,post_imp,dose):
+    X_all_c = X_all[c_cases_idx,:,:]
+    K_all_c = K_all[c_cases_idx,:,:]
+    R_all_c = R_all[c_cases_idx,:,:]
+    print(np.unique(R_all_c))
+    # Re-index the scored subjects with respect to complete cases
+    s_cases_idx = np.in1d(subs,ids[c_cases_idx])
+    subsc = subs[s_cases_idx]
+    pre_imp = pre_imp[s_cases_idx]
+    post_imp = post_imp[s_cases_idx]
+    pre_updrs_off = pre_updrs_off[s_cases_idx]
+    dose = dose[s_cases_idx]
+    per_change = post_imp
+    # Reshape keys and ROIs
+    if all_rois == True:
+        K_all_cu = np.empty((K_all_c.shape[0],K_all_c.shape[1],K_all_c.shape[2]+1),dtype=object)
+        K_all_cu[:,:,:-1] = K_all_c
+        K_all_cu[:,:,-1] = 'pre_updrs'
+        K = K_all_cu.reshape((K_all_cu.shape[0],K_all_cu.shape[1]*K_all_cu.shape[2]))[0]
+        R = R_all_c.reshape((R_all_c.shape[0],R_all_c.shape[1]*R_all_c.shape[2]))
+    else:
+        K = K_all_c.reshape((K_all_c.shape[0],K_all_c.shape[1]*K_all_c.shape[2]))[0]
+        K = np.append(K,['pre_updrs'],0)
+        R = R_all_c.reshape((R_all_c.shape[0],R_all_c.shape[1]*R_all_c.shape[2]))
+    return X_all_c, K, R, subsc, pre_imp, pre_updrs_off, per_change, dose
+
 
 def set_split(X,y,N,tp):
     sss = sms.ShuffleSplit(n_splits=N, test_size=tp)
@@ -428,28 +583,58 @@ def set_split(X,y,N,tp):
     y_train,y_test = y[train_index], y[test_index]
     return X_train, X_test, y_train, y_test, train_index, test_index
 
-def make_feature_matrix(X_all_c,pre_metric,scaler):
-    X = np.zeros((X_all_c.shape[0],X_all_c.shape[1],X_all_c.shape[2]+1))
-    X[:,:,:-1] = X_all_c
-    X[:,:,-1] = mb.repmat(pre_metric,X_all_c.shape[1],1).T
-    X = X.reshape(X.shape[0],((X.shape[1])*X.shape[2]))
-    scaler.fit(X)
-    X = scaler.transform(X)
+def make_feature_matrix(X_all_c,pre_metric,dose,scaler,all_roi,slices):
+    if all_roi == True:
+        X = np.zeros((X_all_c.shape[0],X_all_c.shape[1],X_all_c.shape[2]+2))
+        X[:,:,:-1] = X_all_c
+        if slices == True:
+            X[:,:,-2] = pre_metric
+            X[:,:,-1] = dose
+        else:
+            X[:,:,-2] = mb.repmat(pre_metric,X_all_c.shape[1],1).T
+            X[:,:,-1] = mb.repmat(dose,X_all_c.shape[1],1).T
+        X = X.reshape(X.shape[0],((X.shape[1])*X.shape[2]))
+        scaler.fit(X)
+        X = scaler.transform(X)
+    else:
+        X = X_all_c.reshape(X_all_c.shape[0],((X_all_c.shape[1])*X_all_c.shape[2]))
+        X = np.append(X,pre_metric.reshape(-1,1),1)
+        X = np.append(X,dose.reshape(-1,1),1)
+        scaler.fit(X)
+        X = scaler.transform(X)
     return X, scaler
 
-def model_scale(scaler_type,X_train,train_index,X_test,test_index,pre_metric):
+def model_scale(scaler_type,X_train,train_index,X_test,test_index,pre_metric,dose,all_roi,scale_together,slices):
     scaler = scaler_type
-    X0_tt,scaler = make_feature_matrix(X_train,pre_metric[train_index],scaler)
-    X_test_in = scale_feature_matrix(X_test,pre_metric[test_index],scaler)
+    if scale_together == True:
+        X_all = np.vstack((X_train,X_test))
+        pre_metric = np.hstack((pre_metric[train_index],pre_metric[test_index]))
+        dose = pre_metric = np.hstack((dose[train_index],dose[test_index]))
+        X0_tt,scaler = make_feature_matrix(X_all,pre_metric,dose,scaler,all_roi,slices)
+        X_test_in = X0_tt[test_index,:]
+        X0_tt = X0_tt[train_index,:]
+    else:
+        X0_tt,scaler = make_feature_matrix(X_train,pre_metric[train_index],dose[train_index],scaler,all_roi,slices)
+        X_test_in = scale_feature_matrix(X_test,pre_metric[test_index],dose[test_index],scaler,all_roi,slices)
     return X0_tt,scaler,X_test_in
 
-def scale_feature_matrix(X_test,pre_metric_test,scaler):
-    X = np.zeros((X_test.shape[0],X_test.shape[1],X_test.shape[2]+1))
-    X[:,:,:-1] = X_test
-    X[:,:,-1] = mb.repmat(pre_metric_test,X_test.shape[1],1).T
-    X = X.reshape(X.shape[0],((X.shape[1])*X.shape[2]))
-    X = scaler.transform(X)
-    X = X.reshape(X_test.shape[0],X_test.shape[1],X_test.shape[2]+1)
+def scale_feature_matrix(X_test,pre_metric_test,dose_test,scaler,all_roi,slices):
+    if all_roi == True:
+        X = np.zeros((X_test.shape[0],X_test.shape[1],X_test.shape[2]+2))
+        X[:,:,:-1] = X_test
+        if slices == True:
+            X[:,:,-2] = pre_metric_test
+            X[:,:,-1] = dose_test
+        else:
+            X[:,:,-2] = mb.repmat(pre_metric_test,X_test.shape[1],1).T
+            X[:,:,-1] = mb.repmat(dose_test,X_test.shape[1],1).T
+        X = X.reshape(X.shape[0],((X.shape[1])*X.shape[2]))
+        X = scaler.transform(X)
+    else:
+        X = X_test.reshape(X_test.shape[0],((X_test.shape[1])*X_test.shape[2]))
+        X = np.append(X,pre_metric_test.reshape(1,-1),1)
+        X = np.append(X,dose_test.reshape(1,-1),1)
+        X = scaler.transform(X)
     return X
 
 def rad_smogn(X_t,y_t,yo1,yu,Rmo,Rmu,t,p):
@@ -464,35 +649,35 @@ def rad_smogn(X_t,y_t,yo1,yu,Rmo,Rmu,t,p):
     Rm = [[yo1,  Rmo,    0],  
           [yu,   Rmu,    0]]
     
-    # d = len(D.columns)
-    # yi = pd.DataFrame(D[str(d-1)])
-    # # Pre-index targets
-    # idx = pd.Index((yi.values).ravel())
-    # # Get sorted indices
-    # idx = idx.sort_values(return_indexer=True)
-    # # Sort targets in ascending order
-    # y_sort = yi.sort_values(by=str(d-1))
-    # y_sort = y_sort[str(d-1)]
-    # # Generate relevance function
-    # phi_params = phi_ctrl_pts(y = y_sort,
-    #     method = 'manual',                                
-    #     ctrl_pts = Rm)
-    # y_phi = phi(y = y_sort,              
-    # ctrl_pts = phi_params)
-    # # Verify sample size reduction
-    # N_us = np.sum(np.asarray(y_phi)>t)
-    # idx_kept = (np.asarray(y_phi)<=t)*(idx[1]+1) > 0
+    d = len(D.columns)
+    yi = pd.DataFrame(D[str(d-1)])
+    # Pre-index targets
+    idx = pd.Index((yi.values).ravel())
+    # Get sorted indices
+    idx = idx.sort_values(return_indexer=True)
+    # Sort targets in ascending order
+    y_sort = yi.sort_values(by=str(d-1))
+    y_sort = y_sort[str(d-1)]
+    # Generate relevance function
+    phi_params = phi_ctrl_pts(y = y_sort,
+        method = 'manual',                                
+        ctrl_pts = Rm)
+    y_phi = phi(y = y_sort,              
+    ctrl_pts = phi_params)
+    # Verify sample size reduction
+    N_us = np.sum(np.asarray(y_phi)>t)
+    idx_kept = (np.asarray(y_phi)<=t)*(idx[1]+1) > 0
     # Conduct SMOGN
-    # print('Prior to SMOGN sampling, mean is',X_t.mean(),'standard deviation is',X_t.std())
+    print('Prior to SMOGN sampling, mean is',X_t.mean(),'standard deviation is',X_t.std())
     X_smogn = smogn.smoter(data = D, y = str(D.columns[-1]),
                            rel_method='manual',rel_ctrl_pts_rg = Rm,pert=0.002)
-    #print('After SMOGN sampling, mean is',X_smogn[:,:-1].mean(),'standard deviation is',X_smogn[:,:-1].std())
+    print('After SMOGN sampling, mean is',X_smogn[:,:-1].mean(),'standard deviation is',X_smogn[:,:-1].std())
     y_smogn = np.asarray(X_smogn)[:,-1]
     X_smogn = np.asarray(X_smogn)[:,:-1]
-    # sscaler = skp.StandardScaler()
-    # X_smogn = sscaler.fit_transform(X_smogn)
-    # print('After rescaling, or lackthereof, SMOGN mean is',X_smogn[:,:-1].mean(),'standard deviation is',X_smogn[:,:-1].std())
-    return X_smogn,y_smogn#,idx_kept#,sscaler
+    sscaler = skp.StandardScaler()
+    X_smogn = sscaler.fit_transform(X_smogn)
+    print('After rescaling, or lackthereof, SMOGN mean is',X_smogn[:,:-1].mean(),'standard deviation is',X_smogn[:,:-1].std())
+    return X_smogn,y_smogn,idx_kept,sscaler
 
 def kl_divergence(p, q):
     return np.sum(np.where(p!=0,p*np.log(p/q),0))
@@ -533,7 +718,7 @@ def eval_prediction(results,y_test,names,fig_size):
         ax[j].set_title(names[j])
         ax[j].set_ylabel("DBS improvement")
         ax[j].set_xlabel("Prediction")
-        text = f"$y={lr_prepost.slope:0.2f}\; x{lr_prepost.intercept:+0.2f}$\n$r = {lr_prepost.rvalue:0.2f}$\n$p = {lr_prepost.pvalue:0.3f}$"
+        text = f"$y={lr_prepost.slope:0.2f}\; x{lr_prepost.intercept:+0.2f}$\n$r = {lr_prepost.rvalue:0.2f}$\n$p = {lr_prepost.pvalue:0.2e}$"
         ax[j].text(0.35, 0.75, text,transform=ax[j].transAxes,
             fontsize=14, verticalalignment='top')
         ax[j].hlines(0.3,0,2,linestyle='dashed',color='black')
@@ -551,7 +736,7 @@ def gridsearch_pickparams(model,cvn,param_grid,X0_tt,y_train,scoring,n_js):
         param_grid,
         cv=cvn, 
         scoring=scoring,
-        verbose=10,
+        verbose=2,
         n_jobs=n_js,
         return_train_score=True,
         error_score='raise',
@@ -591,3 +776,101 @@ def nii_slicer(case_path,slice_path):
     V = nib.load(case_path).get_fdata()
     for j in np.arange(V.shape[2]):
         Vj = nib.save(V[:,:,j],slice_path)
+
+def roi_var(qsms,segs,roi_keys):
+    n_rois = len(roi_keys)
+    chi = []
+    mask = []
+    V = np.zeros((len(qsms),n_rois))
+    U = np.zeros((len(qsms),n_rois))
+    sub_err = []
+    for j in np.arange(len(qsms)):
+            mask = nib.load(segs[j]).get_fdata()
+            chi = nib.load(qsms[j]).get_fdata()
+            for k in np.arange(n_rois):
+                if int(qsms[j][-9:-7]) == int(segs[j][-9:-7]):
+                    print('Computing variance for case '+qsms[j],'with mask '+segs[j],'and label '+str(roi_keys[k]))
+                    M = mask == roi_keys[k]
+                    try:
+                        V[j,k] = np.var(chi[M==1])
+                        U[j,k] = np.mean(chi[M==1])
+                    except:
+                       sub_err.append(qsms[j][-9:-7])
+                       print('Omit variance for case '+qsms[j],'with mask '+segs[j]+'and label '+str(roi_keys[k])) 
+    return V, U, sub_err
+
+def pad_to(array,xx,yy,zz):
+    h = array.shape[0]
+    w = array.shape[1]
+    s = array.shape[2]
+    a = (xx-h)//2
+    aa = xx -a-h
+    b = (yy-w)//2
+    bb = yy-b-w
+    c = (zz-s)//2
+    cc = zz-c-s
+    return np.pad(array, pad_width=((a, aa), (b, bb), (c, cc)), mode='constant')
+
+def crop_to(array,xx,yy,zz):
+    h = array.shape[0]
+    w = array.shape[1]
+    s = array.shape[2]
+    a = h//2-(xx//2)
+    b = w//2-(yy//2)
+    c = s//2-(zz//2)
+  
+    print('Cropping to',str(xx),str(yy),str(zz))
+    return array[a:a+xx,b:b+yy,c:c+zz]
+
+def encoder(encoder_weights, encoder_biases, data):
+    res_ae = data
+    for index, (w, b) in enumerate(zip(encoder_weights, encoder_biases)):
+        if index+1 == len(encoder_weights):
+            res_ae = res_ae@w+b 
+        else:
+            res_ae = np.maximum(0, res_ae@w+b)
+    return res_ae
+
+def full_path(directory):
+    return [os.path.join(directory, file) for file in sorted(os.listdir(directory))]
+
+def mask_crop(data,mask):
+    img = data[:,:,~(mask==0).all((0,1))]
+    img = img[~(mask==0).all((1,2)),:,:]
+    img = img[:,~(mask==0).all((0,2)),:]
+    return img
+
+def get_neighbors(y):
+    nns = NearestNeighbors(n_neighbors=2, algorithm='ball_tree').fit(y)
+    distances, indices = nns.kneighbors(y)
+    return indices.flatten()[1::2]
+
+def neighboring_features(X,idx):
+    Xn = np.zeros((len(idx),X.shape[1]))
+    for j in np.arange(len(idx)):
+        Xn[j,:] = X[idx[j],:]
+    return torch.Tensor(Xn)
+
+def l1(x,y):
+    return torch.norm(x-y,1)
+
+def nstack(a,b,gpu):
+    a = np.expand_dims(a,axis=-1)
+    while np.ndim(b) < np.ndim(a):
+        b = np.expand_dims(b,axis=1)
+    if gpu == True:
+        c = torch.Tensor(a).cuda()+torch.Tensor(b).cuda()
+    else:
+        c = a+b
+    return c
+
+def confidence_interval(x,c):
+    d = (c*np.var(x))/(np.sqrt(len(x)))
+    zu = np.mean(x)+d
+    zl = np.mean(x)-d
+    return zu, zl
+
+def get_latent_rep(x_img,model):
+    print(model)
+    z = model(torch.unsqueeze(torch.repeat_interleave(torch.unsqueeze(x_img.cpu(),axis=0), 3, dim=0),axis=0))
+    return z

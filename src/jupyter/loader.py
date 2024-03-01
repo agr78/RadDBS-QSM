@@ -8,7 +8,7 @@ def data_loader(q_directory,s_directory,reload,suffix,qsm_prefix):
 
     # Load data
     segs = []
-    qsms = []
+    #qsms = []
     voxel_sizes = []
     s_dir = s_directory
     q_dir = q_directory
@@ -29,31 +29,30 @@ def data_loader(q_directory,s_directory,reload,suffix,qsm_prefix):
                 voxel_sizes.append(voxel_size)
                 segs.append(seg.get_fdata())
                 qsm = nib.load(q_dir+qsm_prefix+str(id)+'.nii.gz')
-                qsms.append(qsm.get_fdata())
+                qsms = np.append(qsms,qsm.get_fdata(),axis=0)
                 print('Appending arrays with segmentation',seg_filename,'and QSM',str(id)+'.nii.gz')
                 case_list.append('qsm_'+str(id)+'.nii.gz')
                 n_cases = len(segs)
                 d_count = d_count+1
-                with open('./pickles/segs_'+suffix, 'wb') as fp:  
-                    pickle.dump(segs, fp)
-
-                with open('./pickles/qsms_'+suffix, 'wb') as fp:  
-                    pickle.dump(qsms, fp)
-                
-                with open('./pickles/qsms_'+suffix, 'wb') as fp:  
-                    pickle.dump(case_list, fp)
             else:
                 print('Skipping',seg_filename,'and QSM',str(id))
+    
+        with open('./pickles/segs_'+suffix, 'wb') as fp:  
+            pickle.dump(segs, fp)
+        with open('./pickles/qsms_'+suffix, 'wb') as fp:  
+            pickle.dump(qsms, fp)
+        with open('./pickles/cases_'+suffix, 'wb') as fp:  
+            pickle.dump(case_list, fp)
 
     else:
-        with open('/data/Ali/RadDBS-QSM/src/jupyter/pickles/segs_'+suffix, "rb") as fp:  
+        with open('/home/ali/RadDBS-QSM/src/jupyter/pickles/segs_'+suffix, "rb") as fp:  
             segs = pickle.load(fp)
             n_cases = len(segs)
-        with open('/data/Ali/RadDBS-QSM/src/jupyter/pickles/qsms_'+suffix, "rb") as fp:  
+        with open('/home/ali/RadDBS-QSM/src/jupyter/pickles/qsms_'+suffix, "rb") as fp:  
             qsms = pickle.load(fp)
-        with open('/data/Ali/RadDBS-QSM/src/jupyter/pickles/cases_'+suffix, "rb") as fp:  
+        with open('/home/ali/RadDBS-QSM/src/jupyter/pickles/cases_'+suffix, "rb") as fp:  
             try:
                 case_list = pickle.load(fp)
             except:
-                case_list = open('/data/Ali/RadDBS-QSM/src/jupyter/pickles/cases_'+suffix,'r')
+                case_list = open('/home/ali/RadDBS-QSM/src/jupyter/pickles/cases_'+suffix,'r')
     return segs, qsms, n_cases, case_list
