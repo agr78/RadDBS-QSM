@@ -1,0 +1,796 @@
+Use GPU: 0 for training
+=====> Preparing data...
+Using re-weighting: [SQRT_INV]
+Training data size: 33
+Validation data size: 9
+Test data size: 5
+[0.8 0.3 0.8 0.7 0.7]
+=====> Building model...
+DataParallel(
+  (module): ResNet(
+    (conv1): Conv2d(256, 256, kernel_size=(7, 7), stride=(2, 2), padding=(3, 3), bias=False)
+    (bn1): BatchNorm2d(256, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+    (relu): ReLU(inplace=True)
+    (maxpool): MaxPool2d(kernel_size=3, stride=2, padding=1, dilation=1, ceil_mode=False)
+    (layer1): Sequential(
+      (0): Bottleneck(
+        (conv1): Conv2d(256, 256, kernel_size=(1, 1), stride=(1, 1), bias=False)
+        (bn1): BatchNorm2d(256, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+        (conv2): Conv2d(256, 256, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1), bias=False)
+        (bn2): BatchNorm2d(256, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+        (conv3): Conv2d(256, 1024, kernel_size=(1, 1), stride=(1, 1), bias=False)
+        (bn3): BatchNorm2d(1024, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+        (relu): ReLU(inplace=True)
+        (downsample): Sequential(
+          (0): Conv2d(256, 1024, kernel_size=(1, 1), stride=(1, 1), bias=False)
+          (1): BatchNorm2d(1024, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+        )
+      )
+      (1): Bottleneck(
+        (conv1): Conv2d(1024, 256, kernel_size=(1, 1), stride=(1, 1), bias=False)
+        (bn1): BatchNorm2d(256, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+        (conv2): Conv2d(256, 256, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1), bias=False)
+        (bn2): BatchNorm2d(256, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+        (conv3): Conv2d(256, 1024, kernel_size=(1, 1), stride=(1, 1), bias=False)
+        (bn3): BatchNorm2d(1024, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+        (relu): ReLU(inplace=True)
+      )
+      (2): Bottleneck(
+        (conv1): Conv2d(1024, 256, kernel_size=(1, 1), stride=(1, 1), bias=False)
+        (bn1): BatchNorm2d(256, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+        (conv2): Conv2d(256, 256, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1), bias=False)
+        (bn2): BatchNorm2d(256, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+        (conv3): Conv2d(256, 1024, kernel_size=(1, 1), stride=(1, 1), bias=False)
+        (bn3): BatchNorm2d(1024, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+        (relu): ReLU(inplace=True)
+      )
+    )
+    (layer2): Sequential(
+      (0): Bottleneck(
+        (conv1): Conv2d(1024, 256, kernel_size=(1, 1), stride=(1, 1), bias=False)
+        (bn1): BatchNorm2d(256, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+        (conv2): Conv2d(256, 256, kernel_size=(3, 3), stride=(2, 2), padding=(1, 1), bias=False)
+        (bn2): BatchNorm2d(256, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+        (conv3): Conv2d(256, 1024, kernel_size=(1, 1), stride=(1, 1), bias=False)
+        (bn3): BatchNorm2d(1024, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+        (relu): ReLU(inplace=True)
+        (downsample): Sequential(
+          (0): Conv2d(1024, 1024, kernel_size=(1, 1), stride=(2, 2), bias=False)
+          (1): BatchNorm2d(1024, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+        )
+      )
+      (1): Bottleneck(
+        (conv1): Conv2d(1024, 256, kernel_size=(1, 1), stride=(1, 1), bias=False)
+        (bn1): BatchNorm2d(256, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+        (conv2): Conv2d(256, 256, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1), bias=False)
+        (bn2): BatchNorm2d(256, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+        (conv3): Conv2d(256, 1024, kernel_size=(1, 1), stride=(1, 1), bias=False)
+        (bn3): BatchNorm2d(1024, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+        (relu): ReLU(inplace=True)
+      )
+      (2): Bottleneck(
+        (conv1): Conv2d(1024, 256, kernel_size=(1, 1), stride=(1, 1), bias=False)
+        (bn1): BatchNorm2d(256, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+        (conv2): Conv2d(256, 256, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1), bias=False)
+        (bn2): BatchNorm2d(256, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+        (conv3): Conv2d(256, 1024, kernel_size=(1, 1), stride=(1, 1), bias=False)
+        (bn3): BatchNorm2d(1024, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+        (relu): ReLU(inplace=True)
+      )
+      (3): Bottleneck(
+        (conv1): Conv2d(1024, 256, kernel_size=(1, 1), stride=(1, 1), bias=False)
+        (bn1): BatchNorm2d(256, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+        (conv2): Conv2d(256, 256, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1), bias=False)
+        (bn2): BatchNorm2d(256, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+        (conv3): Conv2d(256, 1024, kernel_size=(1, 1), stride=(1, 1), bias=False)
+        (bn3): BatchNorm2d(1024, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+        (relu): ReLU(inplace=True)
+      )
+    )
+    (layer3): Sequential(
+      (0): Bottleneck(
+        (conv1): Conv2d(1024, 256, kernel_size=(1, 1), stride=(1, 1), bias=False)
+        (bn1): BatchNorm2d(256, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+        (conv2): Conv2d(256, 256, kernel_size=(3, 3), stride=(2, 2), padding=(1, 1), bias=False)
+        (bn2): BatchNorm2d(256, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+        (conv3): Conv2d(256, 1024, kernel_size=(1, 1), stride=(1, 1), bias=False)
+        (bn3): BatchNorm2d(1024, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+        (relu): ReLU(inplace=True)
+        (downsample): Sequential(
+          (0): Conv2d(1024, 1024, kernel_size=(1, 1), stride=(2, 2), bias=False)
+          (1): BatchNorm2d(1024, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+        )
+      )
+      (1): Bottleneck(
+        (conv1): Conv2d(1024, 256, kernel_size=(1, 1), stride=(1, 1), bias=False)
+        (bn1): BatchNorm2d(256, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+        (conv2): Conv2d(256, 256, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1), bias=False)
+        (bn2): BatchNorm2d(256, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+        (conv3): Conv2d(256, 1024, kernel_size=(1, 1), stride=(1, 1), bias=False)
+        (bn3): BatchNorm2d(1024, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+        (relu): ReLU(inplace=True)
+      )
+      (2): Bottleneck(
+        (conv1): Conv2d(1024, 256, kernel_size=(1, 1), stride=(1, 1), bias=False)
+        (bn1): BatchNorm2d(256, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+        (conv2): Conv2d(256, 256, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1), bias=False)
+        (bn2): BatchNorm2d(256, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+        (conv3): Conv2d(256, 1024, kernel_size=(1, 1), stride=(1, 1), bias=False)
+        (bn3): BatchNorm2d(1024, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+        (relu): ReLU(inplace=True)
+      )
+      (3): Bottleneck(
+        (conv1): Conv2d(1024, 256, kernel_size=(1, 1), stride=(1, 1), bias=False)
+        (bn1): BatchNorm2d(256, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+        (conv2): Conv2d(256, 256, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1), bias=False)
+        (bn2): BatchNorm2d(256, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+        (conv3): Conv2d(256, 1024, kernel_size=(1, 1), stride=(1, 1), bias=False)
+        (bn3): BatchNorm2d(1024, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+        (relu): ReLU(inplace=True)
+      )
+      (4): Bottleneck(
+        (conv1): Conv2d(1024, 256, kernel_size=(1, 1), stride=(1, 1), bias=False)
+        (bn1): BatchNorm2d(256, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+        (conv2): Conv2d(256, 256, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1), bias=False)
+        (bn2): BatchNorm2d(256, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+        (conv3): Conv2d(256, 1024, kernel_size=(1, 1), stride=(1, 1), bias=False)
+        (bn3): BatchNorm2d(1024, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+        (relu): ReLU(inplace=True)
+      )
+      (5): Bottleneck(
+        (conv1): Conv2d(1024, 256, kernel_size=(1, 1), stride=(1, 1), bias=False)
+        (bn1): BatchNorm2d(256, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+        (conv2): Conv2d(256, 256, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1), bias=False)
+        (bn2): BatchNorm2d(256, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+        (conv3): Conv2d(256, 1024, kernel_size=(1, 1), stride=(1, 1), bias=False)
+        (bn3): BatchNorm2d(1024, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+        (relu): ReLU(inplace=True)
+      )
+    )
+    (layer4): Sequential(
+      (0): Bottleneck(
+        (conv1): Conv2d(1024, 256, kernel_size=(1, 1), stride=(1, 1), bias=False)
+        (bn1): BatchNorm2d(256, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+        (conv2): Conv2d(256, 256, kernel_size=(3, 3), stride=(2, 2), padding=(1, 1), bias=False)
+        (bn2): BatchNorm2d(256, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+        (conv3): Conv2d(256, 1024, kernel_size=(1, 1), stride=(1, 1), bias=False)
+        (bn3): BatchNorm2d(1024, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+        (relu): ReLU(inplace=True)
+        (downsample): Sequential(
+          (0): Conv2d(1024, 1024, kernel_size=(1, 1), stride=(2, 2), bias=False)
+          (1): BatchNorm2d(1024, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+        )
+      )
+      (1): Bottleneck(
+        (conv1): Conv2d(1024, 256, kernel_size=(1, 1), stride=(1, 1), bias=False)
+        (bn1): BatchNorm2d(256, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+        (conv2): Conv2d(256, 256, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1), bias=False)
+        (bn2): BatchNorm2d(256, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+        (conv3): Conv2d(256, 1024, kernel_size=(1, 1), stride=(1, 1), bias=False)
+        (bn3): BatchNorm2d(1024, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+        (relu): ReLU(inplace=True)
+      )
+      (2): Bottleneck(
+        (conv1): Conv2d(1024, 256, kernel_size=(1, 1), stride=(1, 1), bias=False)
+        (bn1): BatchNorm2d(256, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+        (conv2): Conv2d(256, 256, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1), bias=False)
+        (bn2): BatchNorm2d(256, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+        (conv3): Conv2d(256, 1024, kernel_size=(1, 1), stride=(1, 1), bias=False)
+        (bn3): BatchNorm2d(1024, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+        (relu): ReLU(inplace=True)
+      )
+    )
+    (avgpool): AvgPool2d(kernel_size=3, stride=1, padding=0)
+    (bn2): BatchNorm2d(1024, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+    (linear): Linear(in_features=12288, out_features=1, bias=True)
+  )
+)
+ * Overall: MSE 86.934	L1 7.642	G-Mean 5.106
+ * Many: MSE 91.174	L1 7.596	G-Mean 4.520
+ * Low: MSE 78.454	L1 7.734	G-Mean 6.515
+Predicted  [18.55115, 9.847691, 1.1319911, 6.8046846, 9.563494, 8.293655, 1.9896042, 3.2026982, 14.494901]  for true improvements  [0.6, 0.7, 0.5, 0.2, 0.7, 0.5, 0.8, 0.1, 1.0]
+Best MSE Loss: 7.642
+Epoch #0: Train loss [0.6818]; Val loss: MSE [86.9336], L1 [7.6422], G-Mean [5.1059]
+ * Overall: MSE 5520.587	L1 59.042	G-Mean 38.946
+ * Many: MSE 5820.435	L1 60.506	G-Mean 37.783
+ * Low: MSE 4920.890	L1 56.113	G-Mean 41.379
+Predicted  [-145.52664, -69.957985, -6.0668483, -37.108246, -69.50263, -58.65035, -9.532906, -16.49503, -113.435]  for true improvements  [0.6, 0.7, 0.5, 0.2, 0.7, 0.5, 0.8, 0.1, 1.0]
+Best MSE Loss: 7.642
+Epoch #1: Train loss [0.4679]; Val loss: MSE [5520.5868], L1 [59.0417], G-Mean [38.9456]
+ * Overall: MSE 22.053	L1 3.742	G-Mean 2.359
+ * Many: MSE 22.372	L1 3.535	G-Mean 1.898
+ * Low: MSE 21.414	L1 4.156	G-Mean 3.642
+Predicted  [10.347728, 4.5263085, 0.28406382, 3.9685683, 4.532614, 3.5979476, 0.3105861, 1.9802011, 7.8194366]  for true improvements  [0.6, 0.7, 0.5, 0.2, 0.7, 0.5, 0.8, 0.1, 1.0]
+Best MSE Loss: 3.742
+Epoch #2: Train loss [1.2383]; Val loss: MSE [22.0526], L1 [3.7420], G-Mean [2.3589]
+ * Overall: MSE 198.879	L1 10.870	G-Mean 5.027
+ * Many: MSE 204.823	L1 10.565	G-Mean 3.781
+ * Low: MSE 186.991	L1 11.480	G-Mean 8.884
+Predicted  [29.777388, 12.687663, 0.6215782, 9.937011, 12.53342, 10.170067, 0.19936892, 3.4764988, 22.325165]  for true improvements  [0.6, 0.7, 0.5, 0.2, 0.7, 0.5, 0.8, 0.1, 1.0]
+Best MSE Loss: 3.742
+Epoch #3: Train loss [0.7610]; Val loss: MSE [198.8791], L1 [10.8699], G-Mean [5.0267]
+ * Overall: MSE 4.943	L1 1.783	G-Mean 1.251
+ * Many: MSE 4.723	L1 1.879	G-Mean 1.553
+ * Low: MSE 5.383	L1 1.590	G-Mean 0.812
+Predicted  [-3.225715, -1.4748076, -0.16347305, -0.35485, -1.7076985, -0.99552864, 0.093926884, -0.14291734, -2.9725378]  for true improvements  [0.6, 0.7, 0.5, 0.2, 0.7, 0.5, 0.8, 0.1, 1.0]
+Best MSE Loss: 1.783
+Epoch #4: Train loss [0.8260]; Val loss: MSE [4.9429], L1 [1.7826], G-Mean [1.2512]
+ * Overall: MSE 1512.791	L1 30.021	G-Mean 14.549
+ * Many: MSE 1486.615	L1 28.071	G-Mean 10.618
+ * Low: MSE 1565.142	L1 33.920	G-Mean 27.320
+Predicted  [-80.24565, -29.980047, -3.115252, -29.659441, -29.133617, -22.721502, 0.5693857, -11.161504, -59.638412]  for true improvements  [0.6, 0.7, 0.5, 0.2, 0.7, 0.5, 0.8, 0.1, 1.0]
+Best MSE Loss: 1.783
+Epoch #5: Train loss [0.3739]; Val loss: MSE [1512.7906], L1 [30.0207], G-Mean [14.5492]
+ * Overall: MSE 100.676	L1 8.059	G-Mean 5.849
+ * Many: MSE 93.268	L1 7.449	G-Mean 5.108
+ * Low: MSE 115.493	L1 9.278	G-Mean 7.670
+Predicted  [-19.445995, -7.280124, -1.9553579, -7.6090198, -6.2712555, -5.6934156, -0.24794534, -3.3946776, -15.531389]  for true improvements  [0.6, 0.7, 0.5, 0.2, 0.7, 0.5, 0.8, 0.1, 1.0]
+Best MSE Loss: 1.783
+Epoch #6: Train loss [1.0981]; Val loss: MSE [100.6765], L1 [8.0588], G-Mean [5.8495]
+ * Overall: MSE 1770.253	L1 32.165	G-Mean 18.862
+ * Many: MSE 1807.151	L1 30.685	G-Mean 15.378
+ * Low: MSE 1696.456	L1 35.125	G-Mean 28.376
+Predicted  [90.80648, 33.069798, 3.3420775, 29.420134, 33.544575, 24.309618, -1.2379633, 12.332404, 64.9212]  for true improvements  [0.6, 0.7, 0.5, 0.2, 0.7, 0.5, 0.8, 0.1, 1.0]
+Best MSE Loss: 1.783
+Epoch #7: Train loss [0.7181]; Val loss: MSE [1770.2529], L1 [32.1649], G-Mean [18.8619]
+ * Overall: MSE 73.629	L1 6.748	G-Mean 4.274
+ * Many: MSE 80.312	L1 6.594	G-Mean 3.539
+ * Low: MSE 60.262	L1 7.057	G-Mean 6.236
+Predicted  [19.40768, 7.464068, 0.18383986, 7.140767, 8.389229, 5.112089, -0.5768453, 3.2539735, 12.075374]  for true improvements  [0.6, 0.7, 0.5, 0.2, 0.7, 0.5, 0.8, 0.1, 1.0]
+Best MSE Loss: 1.783
+Epoch #8: Train loss [1.4414]; Val loss: MSE [73.6287], L1 [6.7485], G-Mean [4.2743]
+ * Overall: MSE 13475.459	L1 88.971	G-Mean 46.131
+ * Many: MSE 13324.265	L1 82.677	G-Mean 34.148
+ * Low: MSE 13777.849	L1 101.557	G-Mean 84.184
+Predicted  [-247.23174, -85.190254, -15.014802, -85.847855, -83.707565, -60.99537, 1.7250332, -38.390476, -179.13272]  for true improvements  [0.6, 0.7, 0.5, 0.2, 0.7, 0.5, 0.8, 0.1, 1.0]
+Best MSE Loss: 1.783
+Epoch #9: Train loss [0.6753]; Val loss: MSE [13475.4594], L1 [88.9706], G-Mean [46.1307]
+ * Overall: MSE 18486.038	L1 103.556	G-Mean 53.233
+ * Many: MSE 18199.262	L1 95.341	G-Mean 38.850
+ * Low: MSE 19059.589	L1 119.984	G-Mean 99.944
+Predicted  [-292.02292, -96.379326, -16.347452, -103.38544, -94.60264, -68.60416, 1.8908496, -45.662342, -209.6054]  for true improvements  [0.6, 0.7, 0.5, 0.2, 0.7, 0.5, 0.8, 0.1, 1.0]
+Best MSE Loss: 1.783
+Epoch #10: Train loss [1.9010]; Val loss: MSE [18486.0376], L1 [103.5556], G-Mean [53.2329]
+ * Overall: MSE 369.050	L1 14.690	G-Mean 9.154
+ * Many: MSE 359.236	L1 13.497	G-Mean 7.372
+ * Low: MSE 388.679	L1 17.075	G-Mean 14.112
+Predicted  [-40.735607, -12.597338, -2.242584, -14.597457, -11.769826, -9.808237, -0.02832498, -6.2056236, -29.121597]  for true improvements  [0.6, 0.7, 0.5, 0.2, 0.7, 0.5, 0.8, 0.1, 1.0]
+Best MSE Loss: 1.783
+Epoch #11: Train loss [1.9031]; Val loss: MSE [369.0502], L1 [14.6896], G-Mean [9.1535]
+ * Overall: MSE 330.969	L1 12.910	G-Mean 7.723
+ * Many: MSE 337.485	L1 12.231	G-Mean 6.565
+ * Low: MSE 317.938	L1 14.267	G-Mean 10.686
+Predicted  [-41.14277, -9.8720875, -1.3476592, -8.723876, -9.720139, -7.058856, -0.44641888, -4.584263, -28.193058]  for true improvements  [0.6, 0.7, 0.5, 0.2, 0.7, 0.5, 0.8, 0.1, 1.0]
+Best MSE Loss: 1.783
+Epoch #12: Train loss [0.7127]; Val loss: MSE [330.9693], L1 [12.9099], G-Mean [7.7225]
+ * Overall: MSE 18088.719	L1 97.628	G-Mean 35.227
+ * Many: MSE 18207.445	L1 89.960	G-Mean 21.893
+ * Low: MSE 17851.268	L1 112.966	G-Mean 91.208
+Predicted  [-303.17154, -82.59886, -15.349317, -86.99218, -82.242676, -53.334255, 0.7385138, -41.273018, -209.33212]  for true improvements  [0.6, 0.7, 0.5, 0.2, 0.7, 0.5, 0.8, 0.1, 1.0]
+Best MSE Loss: 1.783
+Epoch #13: Train loss [0.5513]; Val loss: MSE [18088.7191], L1 [97.6284], G-Mean [35.2273]
+ * Overall: MSE 8583.076	L1 66.388	G-Mean 28.196
+ * Many: MSE 8602.517	L1 60.582	G-Mean 18.905
+ * Low: MSE 8544.194	L1 77.999	G-Mean 62.721
+Predicted  [-210.2012, -54.287224, -9.3541765, -59.99894, -53.549683, -32.879284, 0.57928324, -28.038511, -144.6602]  for true improvements  [0.6, 0.7, 0.5, 0.2, 0.7, 0.5, 0.8, 0.1, 1.0]
+Best MSE Loss: 1.783
+Epoch #14: Train loss [1.1039]; Val loss: MSE [8583.0758], L1 [66.3878], G-Mean [28.1961]
+ * Overall: MSE 69.330	L1 5.226	G-Mean 2.107
+ * Many: MSE 66.499	L1 4.402	G-Mean 1.531
+ * Low: MSE 74.992	L1 6.873	G-Mean 3.987
+Predicted  [-19.07798, -0.6176698, 2.9020221, -6.073984, -0.83673596, 1.8771869, 0.8978118, -0.64277214, -12.603742]  for true improvements  [0.6, 0.7, 0.5, 0.2, 0.7, 0.5, 0.8, 0.1, 1.0]
+Best MSE Loss: 1.783
+Epoch #15: Train loss [0.7649]; Val loss: MSE [69.3303], L1 [5.2255], G-Mean [2.1067]
+ * Overall: MSE 8971.680	L1 64.855	G-Mean 27.048
+ * Many: MSE 9079.468	L1 57.953	G-Mean 17.838
+ * Low: MSE 8756.106	L1 78.661	G-Mean 62.193
+Predicted  [-221.92465, -46.28561, -6.369172, -62.666885, -44.459976, -25.291096, 0.4149008, -25.911814, -146.10356]  for true improvements  [0.6, 0.7, 0.5, 0.2, 0.7, 0.5, 0.8, 0.1, 1.0]
+Best MSE Loss: 1.783
+Epoch #16: Train loss [1.0126]; Val loss: MSE [8971.6804], L1 [64.8553], G-Mean [27.0483]
+ * Overall: MSE 1021.682	L1 20.280	G-Mean 8.087
+ * Many: MSE 1062.108	L1 17.605	G-Mean 5.185
+ * Low: MSE 940.829	L1 25.632	G-Mean 19.673
+Predicted  [-77.77432, -9.151268, -0.20143716, -21.304882, -8.36615, -6.5758576, 0.24045447, -7.273094, -47.01734]  for true improvements  [0.6, 0.7, 0.5, 0.2, 0.7, 0.5, 0.8, 0.1, 1.0]
+Best MSE Loss: 1.783
+Epoch #17: Train loss [0.7873]; Val loss: MSE [1021.6819], L1 [20.2804], G-Mean [8.0874]
+ * Overall: MSE 14662.889	L1 81.321	G-Mean 35.332
+ * Many: MSE 15098.727	L1 73.500	G-Mean 24.360
+ * Low: MSE 13791.213	L1 96.961	G-Mean 74.327
+Predicted  [-287.58667, -56.82859, -7.289406, -74.11872, -57.167732, -28.152534, -0.17596534, -29.441927, -186.0231]  for true improvements  [0.6, 0.7, 0.5, 0.2, 0.7, 0.5, 0.8, 0.1, 1.0]
+Best MSE Loss: 1.783
+Epoch #18: Train loss [0.7513]; Val loss: MSE [14662.8893], L1 [81.3205], G-Mean [35.3321]
+ * Overall: MSE 81.531	L1 6.270	G-Mean 2.786
+ * Many: MSE 33.506	L1 3.766	G-Mean 1.543
+ * Low: MSE 177.581	L1 11.278	G-Mean 9.086
+Predicted  [-12.248772, 0.5847511, 5.611711, 21.120272, -2.2008371, 1.5054748, 0.18849523, 8.975081, -3.0393965]  for true improvements  [0.6, 0.7, 0.5, 0.2, 0.7, 0.5, 0.8, 0.1, 1.0]
+Best MSE Loss: 1.783
+Epoch #19: Train loss [0.9870]; Val loss: MSE [81.5306], L1 [6.2698], G-Mean [2.7864]
+ * Overall: MSE 2362.083	L1 29.748	G-Mean 10.316
+ * Many: MSE 2484.751	L1 28.661	G-Mean 8.988
+ * Low: MSE 2116.748	L1 31.920	G-Mean 13.591
+Predicted  [-117.08819, -19.73974, 1.8428911, -15.372168, -23.419056, -6.973963, -0.105115, -1.9636395, -77.12486]  for true improvements  [0.6, 0.7, 0.5, 0.2, 0.7, 0.5, 0.8, 0.1, 1.0]
+Best MSE Loss: 1.783
+Epoch #20: Train loss [0.9228]; Val loss: MSE [2362.0833], L1 [29.7477], G-Mean [10.3161]
+ * Overall: MSE 5759.550	L1 47.942	G-Mean 16.273
+ * Many: MSE 5865.940	L1 42.710	G-Mean 10.374
+ * Low: MSE 5546.769	L1 58.407	G-Mean 40.040
+Predicted  [-181.46146, -30.168552, -1.1482173, -40.11578, -30.945152, -9.095231, 0.3568783, -12.96824, -120.83664]  for true improvements  [0.6, 0.7, 0.5, 0.2, 0.7, 0.5, 0.8, 0.1, 1.0]
+Best MSE Loss: 1.783
+Epoch #21: Train loss [0.5614]; Val loss: MSE [5759.5496], L1 [47.9425], G-Mean [16.2726]
+ * Overall: MSE 23317.243	L1 95.794	G-Mean 22.372
+ * Many: MSE 23649.202	L1 82.183	G-Mean 11.041
+ * Low: MSE 22653.326	L1 123.015	G-Mean 91.860
+Predicted  [-368.30472, -52.65703, -4.938659, -93.97728, -51.87509, -12.299564, 0.7748571, -34.099693, -239.66782]  for true improvements  [0.6, 0.7, 0.5, 0.2, 0.7, 0.5, 0.8, 0.1, 1.0]
+Best MSE Loss: 1.783
+Epoch #22: Train loss [0.6541]; Val loss: MSE [23317.2432], L1 [95.7939], G-Mean [22.3722]
+ * Overall: MSE 1334.943	L1 21.735	G-Mean 8.543
+ * Many: MSE 1438.626	L1 20.194	G-Mean 6.494
+ * Low: MSE 1127.577	L1 24.817	G-Mean 14.786
+Predicted  [-90.7104, -11.175574, 2.8487284, -13.898625, -11.0190115, -2.6032321, 1.609911, -3.9739997, -55.27932]  for true improvements  [0.6, 0.7, 0.5, 0.2, 0.7, 0.5, 0.8, 0.1, 1.0]
+Best MSE Loss: 1.783
+Epoch #23: Train loss [0.7479]; Val loss: MSE [1334.9430], L1 [21.7354], G-Mean [8.5434]
+ * Overall: MSE 15086.139	L1 74.789	G-Mean 16.223
+ * Many: MSE 15390.778	L1 61.745	G-Mean 7.432
+ * Low: MSE 14476.863	L1 100.879	G-Mean 77.297
+Predicted  [-299.6528, -33.857533, -1.4717215, -86.95477, -30.771109, -1.5892656, 0.67473644, -28.211372, -186.17131]  for true improvements  [0.6, 0.7, 0.5, 0.2, 0.7, 0.5, 0.8, 0.1, 1.0]
+Best MSE Loss: 1.783
+Epoch #24: Train loss [0.8310]; Val loss: MSE [15086.1394], L1 [74.7895], G-Mean [16.2227]
+ * Overall: MSE 2574.615	L1 30.065	G-Mean 8.489
+ * Many: MSE 2670.206	L1 25.554	G-Mean 4.954
+ * Low: MSE 2383.432	L1 39.087	G-Mean 24.931
+Predicted  [-124.74323, -12.475705, 2.4307857, -34.17191, -10.783153, -0.47485995, 1.2139823, -5.7521095, -76.03649]  for true improvements  [0.6, 0.7, 0.5, 0.2, 0.7, 0.5, 0.8, 0.1, 1.0]
+Best MSE Loss: 1.783
+Epoch #25: Train loss [0.9721]; Val loss: MSE [2574.6149], L1 [30.0647], G-Mean [8.4892]
+ * Overall: MSE 3253.500	L1 33.738	G-Mean 6.693
+ * Many: MSE 3373.170	L1 27.002	G-Mean 2.884
+ * Low: MSE 3014.162	L1 47.211	G-Mean 36.049
+Predicted  [-141.01126, -9.538539, 0.6683073, -49.380367, -8.234318, 0.09710899, 1.4547623, -11.668452, -79.28559]  for true improvements  [0.6, 0.7, 0.5, 0.2, 0.7, 0.5, 0.8, 0.1, 1.0]
+Best MSE Loss: 1.783
+Epoch #26: Train loss [0.9202]; Val loss: MSE [3253.5004], L1 [33.7383], G-Mean [6.6927]
+ * Overall: MSE 870.124	L1 18.012	G-Mean 6.169
+ * Many: MSE 830.386	L1 13.330	G-Mean 3.196
+ * Low: MSE 949.600	L1 27.376	G-Mean 22.992
+Predicted  [71.03378, 3.2840686, 2.2755845, 28.05479, 3.6990247, -0.28538585, 2.199612, 9.914045, 45.45893]  for true improvements  [0.6, 0.7, 0.5, 0.2, 0.7, 0.5, 0.8, 0.1, 1.0]
+Best MSE Loss: 1.783
+Epoch #27: Train loss [0.5260]; Val loss: MSE [870.1244], L1 [18.0117], G-Mean [6.1694]
+ * Overall: MSE 1515.366	L1 22.570	G-Mean 5.641
+ * Many: MSE 1612.465	L1 17.657	G-Mean 2.562
+ * Low: MSE 1321.167	L1 32.397	G-Mean 27.359
+Predicted  [-97.67596, -1.884656, -0.20126246, -32.99151, -2.1851828, 1.3348234, 1.4586817, -11.72544, -51.172634]  for true improvements  [0.6, 0.7, 0.5, 0.2, 0.7, 0.5, 0.8, 0.1, 1.0]
+Best MSE Loss: 1.783
+Epoch #28: Train loss [1.2460]; Val loss: MSE [1515.3658], L1 [22.5700], G-Mean [5.6414]
+ * Overall: MSE 484.568	L1 12.533	G-Mean 2.676
+ * Many: MSE 518.989	L1 10.078	G-Mean 1.251
+ * Low: MSE 415.725	L1 17.442	G-Mean 12.248
+Predicted  [56.32954, 2.084538, 0.95340204, 21.208622, 3.1279294, 0.6309817, 1.143762, 3.1993396, 29.217138]  for true improvements  [0.6, 0.7, 0.5, 0.2, 0.7, 0.5, 0.8, 0.1, 1.0]
+Best MSE Loss: 1.783
+Epoch #29: Train loss [0.6089]; Val loss: MSE [484.5677], L1 [12.5328], G-Mean [2.6756]
+ * Overall: MSE 1584.747	L1 22.239	G-Mean 1.794
+ * Many: MSE 1658.258	L1 16.832	G-Mean 0.478
+ * Low: MSE 1437.726	L1 33.054	G-Mean 25.257
+Predicted  [-99.14439, -0.015908742, 0.4458931, -38.845627, 0.62191266, 0.7226116, 0.62232906, -7.8026457, -51.212704]  for true improvements  [0.6, 0.7, 0.5, 0.2, 0.7, 0.5, 0.8, 0.1, 1.0]
+Best MSE Loss: 1.783
+Epoch #30: Train loss [0.9673]; Val loss: MSE [1584.7472], L1 [22.2393], G-Mean [1.7938]
+ * Overall: MSE 49.616	L1 3.942	G-Mean 0.946
+ * Many: MSE 54.776	L1 3.330	G-Mean 0.455
+ * Low: MSE 39.296	L1 5.166	G-Mean 4.077
+Predicted  [18.696047, 0.73910606, 0.41642025, 3.635657, 1.4346573, 0.22780336, 1.5539542, 2.0497978, 11.113505]  for true improvements  [0.6, 0.7, 0.5, 0.2, 0.7, 0.5, 0.8, 0.1, 1.0]
+Best MSE Loss: 1.783
+Epoch #31: Train loss [0.7489]; Val loss: MSE [49.6162], L1 [3.9421], G-Mean [0.9455]
+ * Overall: MSE 1453.462	L1 20.787	G-Mean 1.649
+ * Many: MSE 1551.468	L1 16.258	G-Mean 0.466
+ * Low: MSE 1257.451	L1 29.844	G-Mean 20.627
+Predicted  [-95.88047, 0.5308365, 0.9630318, -32.188457, 0.8622984, 0.73745483, 0.7647114, -5.1184235, -50.92406]  for true improvements  [0.6, 0.7, 0.5, 0.2, 0.7, 0.5, 0.8, 0.1, 1.0]
+Best MSE Loss: 1.783
+Epoch #32: Train loss [0.7182]; Val loss: MSE [1453.4623], L1 [20.7865], G-Mean [1.6491]
+ * Overall: MSE 8.709	L1 1.845	G-Mean 0.639
+ * Many: MSE 8.012	L1 1.380	G-Mean 0.352
+ * Low: MSE 10.103	L1 2.777	G-Mean 2.108
+Predicted  [7.489561, 0.5162342, 0.043927033, 4.455637, 1.2906725, 0.44786075, 0.9068734, -0.5409686, 4.4333324]  for true improvements  [0.6, 0.7, 0.5, 0.2, 0.7, 0.5, 0.8, 0.1, 1.0]
+Best MSE Loss: 1.783
+Epoch #33: Train loss [0.7498]; Val loss: MSE [8.7089], L1 [1.8454], G-Mean [0.6391]
+ * Overall: MSE 512.808	L1 12.030	G-Mean 2.058
+ * Many: MSE 605.335	L1 10.378	G-Mean 0.894
+ * Low: MSE 327.755	L1 15.335	G-Mean 10.909
+Predicted  [-59.658966, 1.218911, 0.26684353, -16.431896, 1.2239685, 0.85786754, 0.4267784, -2.8548462, -25.418083]  for true improvements  [0.6, 0.7, 0.5, 0.2, 0.7, 0.5, 0.8, 0.1, 1.0]
+Best MSE Loss: 1.783
+Epoch #34: Train loss [0.7966]; Val loss: MSE [512.8083], L1 [12.0301], G-Mean [2.0581]
+ * Overall: MSE 526.248	L1 12.471	G-Mean 2.028
+ * Many: MSE 579.567	L1 10.265	G-Mean 0.864
+ * Low: MSE 419.609	L1 16.882	G-Mean 11.188
+Predicted  [59.549477, 0.27986562, -0.076293625, 17.09516, 0.5749215, 0.6728088, 2.144564, 2.7664154, 32.08489]  for true improvements  [0.6, 0.7, 0.5, 0.2, 0.7, 0.5, 0.8, 0.1, 1.0]
+Best MSE Loss: 1.783
+Epoch #35: Train loss [0.5510]; Val loss: MSE [526.2477], L1 [12.4705], G-Mean [2.0282]
+ * Overall: MSE 342.966	L1 9.799	G-Mean 1.295
+ * Many: MSE 400.858	L1 8.488	G-Mean 0.619
+ * Low: MSE 227.182	L1 12.421	G-Mean 5.661
+Predicted  [-48.430748, 0.90485454, 0.44167963, -16.277023, 0.882553, 1.2310995, 1.52153, 0.64399564, -19.242472]  for true improvements  [0.6, 0.7, 0.5, 0.2, 0.7, 0.5, 0.8, 0.1, 1.0]
+Best MSE Loss: 1.783
+Epoch #36: Train loss [0.9562]; Val loss: MSE [342.9660], L1 [9.7992], G-Mean [1.2949]
+ * Overall: MSE 481.677	L1 11.878	G-Mean 1.692
+ * Many: MSE 539.899	L1 9.941	G-Mean 0.639
+ * Low: MSE 365.233	L1 15.752	G-Mean 11.879
+Predicted  [57.48453, 0.72555375, 0.6793179, 12.713523, 0.33249852, 0.8947642, 2.5941942, 4.517123, 31.324888]  for true improvements  [0.6, 0.7, 0.5, 0.2, 0.7, 0.5, 0.8, 0.1, 1.0]
+Best MSE Loss: 1.783
+Epoch #37: Train loss [0.6018]; Val loss: MSE [481.6768], L1 [11.8779], G-Mean [1.6921]
+ * Overall: MSE 292.732	L1 9.459	G-Mean 2.551
+ * Many: MSE 342.333	L1 8.147	G-Mean 1.366
+ * Low: MSE 193.531	L1 12.085	G-Mean 8.904
+Predicted  [-44.68968, 1.6000314, 1.5256374, -18.195744, 1.2312317, 1.2358395, 1.1967268, 2.5986085, -14.360511]  for true improvements  [0.6, 0.7, 0.5, 0.2, 0.7, 0.5, 0.8, 0.1, 1.0]
+Best MSE Loss: 1.783
+Epoch #38: Train loss [0.9543]; Val loss: MSE [292.7322], L1 [9.4593], G-Mean [2.5512]
+ * Overall: MSE 39.776	L1 3.400	G-Mean 0.598
+ * Many: MSE 40.561	L1 2.923	G-Mean 0.341
+ * Low: MSE 38.207	L1 4.354	G-Mean 1.837
+Predicted  [16.157907, 0.7469823, 1.2984055, -0.050266203, 0.7092605, 0.91141045, 1.5130873, 2.4738283, 11.436572]  for true improvements  [0.6, 0.7, 0.5, 0.2, 0.7, 0.5, 0.8, 0.1, 1.0]
+Best MSE Loss: 1.783
+Epoch #39: Train loss [0.5592]; Val loss: MSE [39.7762], L1 [3.3997], G-Mean [0.5983]
+ * Overall: MSE 60.117	L1 4.500	G-Mean 1.438
+ * Many: MSE 66.412	L1 3.852	G-Mean 0.811
+ * Low: MSE 47.528	L1 5.794	G-Mean 4.522
+Predicted  [-19.294619, 1.2806715, 1.5675725, -10.573818, 1.3531338, 1.3777708, 0.759796, 1.875302, -3.8329237]  for true improvements  [0.6, 0.7, 0.5, 0.2, 0.7, 0.5, 0.8, 0.1, 1.0]
+Best MSE Loss: 1.783
+Epoch #40: Train loss [0.5157]; Val loss: MSE [60.1173], L1 [4.4996], G-Mean [1.4379]
+ * Overall: MSE 59.194	L1 4.571	G-Mean 2.037
+ * Many: MSE 70.511	L1 4.110	G-Mean 1.345
+ * Low: MSE 36.560	L1 5.493	G-Mean 4.670
+Predicted  [-19.871668, 1.1087774, 1.8718363, -6.959602, 1.512603, 1.3130816, 0.01977599, 2.0231812, -6.3974085]  for true improvements  [0.6, 0.7, 0.5, 0.2, 0.7, 0.5, 0.8, 0.1, 1.0]
+Best MSE Loss: 1.783
+Epoch #41: Train loss [0.5826]; Val loss: MSE [59.1943], L1 [4.5709], G-Mean [2.0366]
+ * Overall: MSE 3.874	L1 1.512	G-Mean 0.841
+ * Many: MSE 1.875	L1 0.898	G-Mean 0.472
+ * Low: MSE 7.872	L1 2.739	G-Mean 2.670
+Predicted  [3.717391, 0.27784565, 1.4879853, -2.5279646, 0.9229064, 1.0704515, 0.73303914, 2.1012237, 4.488294]  for true improvements  [0.6, 0.7, 0.5, 0.2, 0.7, 0.5, 0.8, 0.1, 1.0]
+Best MSE Loss: 1.512
+Epoch #42: Train loss [0.4309]; Val loss: MSE [3.8741], L1 [1.5117], G-Mean [0.8412]
+ * Overall: MSE 59.714	L1 4.115	G-Mean 0.735
+ * Many: MSE 71.944	L1 3.629	G-Mean 0.310
+ * Low: MSE 35.253	L1 5.086	G-Mean 4.125
+Predicted  [21.368513, 0.28671446, 0.8855172, 4.5277433, 0.8006589, 0.54156965, 0.86435723, 1.8707529, 10.159309]  for true improvements  [0.6, 0.7, 0.5, 0.2, 0.7, 0.5, 0.8, 0.1, 1.0]
+Best MSE Loss: 1.512
+Epoch #43: Train loss [0.7060]; Val loss: MSE [59.7138], L1 [4.1146], G-Mean [0.7349]
+ * Overall: MSE 225.032	L1 7.571	G-Mean 0.550
+ * Many: MSE 284.059	L1 7.016	G-Mean 0.166
+ * Low: MSE 106.979	L1 8.682	G-Mean 6.029
+Predicted  [-40.681637, 0.46137506, 0.75398844, -8.983665, 0.9173068, 0.3987684, 0.79962105, 1.6590213, -14.302521]  for true improvements  [0.6, 0.7, 0.5, 0.2, 0.7, 0.5, 0.8, 0.1, 1.0]
+Best MSE Loss: 1.512
+Epoch #44: Train loss [0.5931]; Val loss: MSE [225.0322], L1 [7.5709], G-Mean [0.5495]
+ * Overall: MSE 29.683	L1 2.879	G-Mean 0.745
+ * Many: MSE 38.214	L1 2.728	G-Mean 0.385
+ * Low: MSE 12.621	L1 3.183	G-Mean 2.785
+Predicted  [15.727524, 0.2811113, 0.28370634, 3.030518, 0.60103995, 0.046946485, 0.85296804, 1.5494785, 6.2677727]  for true improvements  [0.6, 0.7, 0.5, 0.2, 0.7, 0.5, 0.8, 0.1, 1.0]
+Best MSE Loss: 1.512
+Epoch #45: Train loss [0.6247]; Val loss: MSE [29.6827], L1 [2.8795], G-Mean [0.7446]
+ * Overall: MSE 41.767	L1 3.388	G-Mean 0.609
+ * Many: MSE 52.913	L1 3.117	G-Mean 0.260
+ * Low: MSE 19.477	L1 3.930	G-Mean 3.331
+Predicted  [-17.210657, 0.8141176, 0.81203145, -3.7296238, 0.62632674, 0.12405876, 0.7822932, 1.5715723, -5.3892865]  for true improvements  [0.6, 0.7, 0.5, 0.2, 0.7, 0.5, 0.8, 0.1, 1.0]
+Best MSE Loss: 1.512
+Epoch #46: Train loss [0.6025]; Val loss: MSE [41.7675], L1 [3.3883], G-Mean [0.6088]
+ * Overall: MSE 43.413	L1 3.510	G-Mean 1.059
+ * Many: MSE 54.369	L1 3.305	G-Mean 0.609
+ * Low: MSE 21.502	L1 3.919	G-Mean 3.201
+Predicted  [-17.439777, 0.5965662, 1.1136422, -2.6356022, 0.3299144, 0.08161409, 0.51235586, 1.6741506, -6.347525]  for true improvements  [0.6, 0.7, 0.5, 0.2, 0.7, 0.5, 0.8, 0.1, 1.0]
+Best MSE Loss: 1.512
+Epoch #47: Train loss [0.4755]; Val loss: MSE [43.4134], L1 [3.5100], G-Mean [1.0588]
+ * Overall: MSE 61.090	L1 4.089	G-Mean 1.340
+ * Many: MSE 81.170	L1 4.089	G-Mean 0.844
+ * Low: MSE 20.931	L1 4.089	G-Mean 3.384
+Predicted  [22.634508, 0.5297752, 1.3013977, 6.4154034, 0.33024043, -0.18273342, 0.32504967, 1.4169395, 5.7356296]  for true improvements  [0.6, 0.7, 0.5, 0.2, 0.7, 0.5, 0.8, 0.1, 1.0]
+Best MSE Loss: 1.512
+Epoch #48: Train loss [0.3712]; Val loss: MSE [61.0901], L1 [4.0891], G-Mean [1.3404]
+ * Overall: MSE 1.101	L1 0.881	G-Mean 0.588
+ * Many: MSE 0.644	L1 0.613	G-Mean 0.379
+ * Low: MSE 2.015	L1 1.418	G-Mean 1.417
+Predicted  [2.1557868, 0.9553157, 1.1028322, 1.537413, 0.75575083, 0.2733562, -0.17950198, 1.5560547, -0.46156055]  for true improvements  [0.6, 0.7, 0.5, 0.2, 0.7, 0.5, 0.8, 0.1, 1.0]
+Best MSE Loss: 0.881
+Epoch #49: Train loss [0.5349]; Val loss: MSE [1.1009], L1 [0.8812], G-Mean [0.5883]
+ * Overall: MSE 194.006	L1 6.756	G-Mean 1.392
+ * Many: MSE 257.604	L1 6.897	G-Mean 0.770
+ * Low: MSE 66.811	L1 6.473	G-Mean 4.551
+Predicted  [-38.700703, 1.1593237, 1.2420427, -4.3430624, 1.1454815, 0.3926487, 0.47423896, 1.6581774, -12.317849]  for true improvements  [0.6, 0.7, 0.5, 0.2, 0.7, 0.5, 0.8, 0.1, 1.0]
+Best MSE Loss: 0.881
+Epoch #50: Train loss [0.5845]; Val loss: MSE [194.0062], L1 [6.7555], G-Mean [1.3924]
+ * Overall: MSE 228.016	L1 7.141	G-Mean 1.103
+ * Many: MSE 311.501	L1 7.604	G-Mean 0.678
+ * Low: MSE 61.047	L1 6.215	G-Mean 2.921
+Predicted  [43.806137, 0.46501493, 0.6168453, 6.597925, 0.0414684, -0.812901, 0.7052105, 0.42665216, 12.920571]  for true improvements  [0.6, 0.7, 0.5, 0.2, 0.7, 0.5, 0.8, 0.1, 1.0]
+Best MSE Loss: 0.881
+Epoch #51: Train loss [0.6715]; Val loss: MSE [228.0162], L1 [7.1410], G-Mean [1.1033]
+ * Overall: MSE 17.333	L1 2.291	G-Mean 0.770
+ * Many: MSE 22.869	L1 2.355	G-Mean 0.505
+ * Low: MSE 6.260	L1 2.163	G-Mean 1.789
+Predicted  [12.2078285, 0.65722543, 1.0121776, 2.032152, 0.25020295, -0.91247743, 0.69711804, 0.9135273, 4.8422346]  for true improvements  [0.6, 0.7, 0.5, 0.2, 0.7, 0.5, 0.8, 0.1, 1.0]
+Best MSE Loss: 0.881
+Epoch #52: Train loss [0.9907]; Val loss: MSE [17.3328], L1 [2.2906], G-Mean [0.7700]
+ * Overall: MSE 1251.584	L1 15.909	G-Mean 1.729
+ * Many: MSE 1737.495	L1 17.418	G-Mean 0.908
+ * Low: MSE 279.763	L1 12.891	G-Mean 6.262
+Predicted  [-101.49444, 1.6695653, 0.9807595, -10.895892, 1.3976634, 0.34281448, 0.69235754, 0.9272737, -25.748562]  for true improvements  [0.6, 0.7, 0.5, 0.2, 0.7, 0.5, 0.8, 0.1, 1.0]
+Best MSE Loss: 0.881
+Epoch #53: Train loss [0.4648]; Val loss: MSE [1251.5841], L1 [15.9088], G-Mean [1.7288]
+ * Overall: MSE 910.499	L1 13.342	G-Mean 1.264
+ * Many: MSE 1273.071	L1 14.881	G-Mean 0.909
+ * Low: MSE 185.355	L1 10.264	G-Mean 2.445
+Predicted  [-86.79366, 1.292742, 0.18428029, -8.66479, 1.0164623, 0.20938559, 0.42461896, 0.17546305, -20.85119]  for true improvements  [0.6, 0.7, 0.5, 0.2, 0.7, 0.5, 0.8, 0.1, 1.0]
+Best MSE Loss: 0.881
+Epoch #54: Train loss [1.5559]; Val loss: MSE [910.4993], L1 [13.3418], G-Mean [1.2643]
+ * Overall: MSE 2.720	L1 1.143	G-Mean 0.539
+ * Many: MSE 3.512	L1 1.345	G-Mean 0.707
+ * Low: MSE 1.137	L1 0.738	G-Mean 0.314
+Predicted  [4.6675324, -0.3860396, 0.18699563, 0.55549765, -0.5112411, -0.83409685, 0.74410963, 0.14790101, 2.8117733]  for true improvements  [0.6, 0.7, 0.5, 0.2, 0.7, 0.5, 0.8, 0.1, 1.0]
+Best MSE Loss: 0.881
+Epoch #55: Train loss [1.2623]; Val loss: MSE [2.7204], L1 [1.1426], G-Mean [0.5392]
+ * Overall: MSE 201.765	L1 6.812	G-Mean 1.885
+ * Many: MSE 285.751	L1 7.907	G-Mean 1.956
+ * Low: MSE 33.792	L1 4.622	G-Mean 1.751
+Predicted  [41.895245, -1.0794857, 1.0295303, 5.2138524, -0.9638424, -1.1483531, 0.27464494, 0.22271731, 9.730515]  for true improvements  [0.6, 0.7, 0.5, 0.2, 0.7, 0.5, 0.8, 0.1, 1.0]
+Best MSE Loss: 0.881
+Epoch #56: Train loss [0.9752]; Val loss: MSE [201.7646], L1 [6.8121], G-Mean [1.8855]
+ * Overall: MSE 78.108	L1 4.247	G-Mean 1.144
+ * Many: MSE 106.182	L1 4.878	G-Mean 1.232
+ * Low: MSE 21.959	L1 2.985	G-Mean 0.986
+Predicted  [-24.553188, -0.41132042, 2.0191693, 0.3685331, 0.052923042, -0.13829081, 0.6005002, 0.8026244, -7.0842347]  for true improvements  [0.6, 0.7, 0.5, 0.2, 0.7, 0.5, 0.8, 0.1, 1.0]
+Best MSE Loss: 0.881
+Epoch #57: Train loss [1.1499]; Val loss: MSE [78.1076], L1 [4.2471], G-Mean [1.1438]
+ * Overall: MSE 5.336	L1 1.669	G-Mean 1.082
+ * Many: MSE 4.302	L1 1.352	G-Mean 0.829
+ * Low: MSE 7.403	L1 2.304	G-Mean 1.842
+Predicted  [-4.212325, -0.3495801, 1.4894432, 2.0746043, 0.13448657, 0.23082261, 0.37331647, 0.8836715, -3.2522354]  for true improvements  [0.6, 0.7, 0.5, 0.2, 0.7, 0.5, 0.8, 0.1, 1.0]
+Best MSE Loss: 0.881
+Epoch #58: Train loss [0.7343]; Val loss: MSE [5.3359], L1 [1.6692], G-Mean [1.0817]
+ * Overall: MSE 53.666	L1 3.273	G-Mean 0.963
+ * Many: MSE 79.000	L1 4.140	G-Mean 0.847
+ * Low: MSE 2.999	L1 1.541	G-Mean 1.244
+Predicted  [22.307537, -0.5012862, 0.5926018, 2.4761043, -0.07201952, 0.25967002, -0.024334054, 0.54526484, 2.9018025]  for true improvements  [0.6, 0.7, 0.5, 0.2, 0.7, 0.5, 0.8, 0.1, 1.0]
+Best MSE Loss: 0.881
+Epoch #59: Train loss [0.6828]; Val loss: MSE [53.6664], L1 [3.2735], G-Mean [0.9629]
+ * Overall: MSE 43.234	L1 2.848	G-Mean 0.813
+ * Many: MSE 64.225	L1 3.748	G-Mean 0.748
+ * Low: MSE 1.251	L1 1.049	G-Mean 0.961
+Predicted  [20.168663, -0.40816817, 0.5566667, 1.6220093, -0.027852548, 0.24588962, 0.030312745, 0.615789, 2.2099795]  for true improvements  [0.6, 0.7, 0.5, 0.2, 0.7, 0.5, 0.8, 0.1, 1.0]
+Best MSE Loss: 0.881
+Epoch #60: Train loss [0.5603]; Val loss: MSE [43.2336], L1 [2.8481], G-Mean [0.8130]
+ * Overall: MSE 20.050	L1 1.883	G-Mean 0.505
+ * Many: MSE 29.959	L1 2.625	G-Mean 0.701
+ * Low: MSE 0.232	L1 0.399	G-Mean 0.262
+Predicted  [13.949075, -0.21323158, 0.6862525, 0.61991364, 0.05311537, 0.33458602, 0.30982348, 0.8179711, 0.9404844]  for true improvements  [0.6, 0.7, 0.5, 0.2, 0.7, 0.5, 0.8, 0.1, 1.0]
+Best MSE Loss: 0.881
+Epoch #61: Train loss [0.4800]; Val loss: MSE [20.0498], L1 [1.8832], G-Mean [0.5050]
+ * Overall: MSE 5.473	L1 1.260	G-Mean 0.618
+ * Many: MSE 7.774	L1 1.485	G-Mean 0.624
+ * Low: MSE 0.871	L1 0.810	G-Mean 0.607
+Predicted  [7.34565, -0.062017895, 0.9581125, 0.019271903, 0.20440634, 0.28728557, 0.5620329, 1.0593587, -0.28889325]  for true improvements  [0.6, 0.7, 0.5, 0.2, 0.7, 0.5, 0.8, 0.1, 1.0]
+Best MSE Loss: 0.881
+Epoch #62: Train loss [0.3496]; Val loss: MSE [5.4729], L1 [1.2601], G-Mean [0.6183]
+ * Overall: MSE 0.971	L1 0.774	G-Mean 0.586
+ * Many: MSE 0.287	L1 0.483	G-Mean 0.415
+ * Low: MSE 2.341	L1 1.355	G-Mean 1.171
+Predicted  [1.379778, 0.056481235, 1.1753023, -0.40214363, 0.31482247, 0.22743791, 0.65660936, 1.2550626, -1.3076257]  for true improvements  [0.6, 0.7, 0.5, 0.2, 0.7, 0.5, 0.8, 0.1, 1.0]
+Best MSE Loss: 0.774
+Epoch #63: Train loss [0.2228]; Val loss: MSE [0.9715], L1 [0.7738], G-Mean [0.5863]
+ * Overall: MSE 0.969	L1 0.743	G-Mean 0.494
+ * Many: MSE 0.255	L1 0.419	G-Mean 0.314
+ * Low: MSE 2.397	L1 1.392	G-Mean 1.218
+Predicted  [0.72087055, 0.14224328, 1.4280477, -0.41854972, 0.28524813, 0.09992261, 0.7070692, 1.3869036, -1.2700748]  for true improvements  [0.6, 0.7, 0.5, 0.2, 0.7, 0.5, 0.8, 0.1, 1.0]
+Best MSE Loss: 0.743
+Epoch #64: Train loss [0.1745]; Val loss: MSE [0.9689], L1 [0.7433], G-Mean [0.4937]
+ * Overall: MSE 0.987	L1 0.810	G-Mean 0.581
+ * Many: MSE 0.448	L1 0.579	G-Mean 0.431
+ * Low: MSE 2.063	L1 1.273	G-Mean 1.055
+Predicted  [1.5328119, 0.1770574, 1.5747206, -0.22675362, 0.24450289, 0.076374926, 0.73657346, 1.4398185, -1.0525012]  for true improvements  [0.6, 0.7, 0.5, 0.2, 0.7, 0.5, 0.8, 0.1, 1.0]
+Best MSE Loss: 0.743
+Epoch #65: Train loss [0.2344]; Val loss: MSE [0.9866], L1 [0.8102], G-Mean [0.5809]
+ * Overall: MSE 1.354	L1 0.922	G-Mean 0.632
+ * Many: MSE 1.032	L1 0.782	G-Mean 0.546
+ * Low: MSE 1.999	L1 1.203	G-Mean 0.846
+Predicted  [2.6659057, 0.19893476, 1.6242036, -0.018340169, 0.21119562, 0.10857017, 0.6809073, 1.4754511, -1.0141792]  for true improvements  [0.6, 0.7, 0.5, 0.2, 0.7, 0.5, 0.8, 0.1, 1.0]
+Best MSE Loss: 0.743
+Epoch #66: Train loss [0.2342]; Val loss: MSE [1.3540], L1 [0.9221], G-Mean [0.6318]
+ * Overall: MSE 4.337	L1 1.282	G-Mean 0.692
+ * Many: MSE 5.782	L1 1.414	G-Mean 0.722
+ * Low: MSE 1.448	L1 1.019	G-Mean 0.635
+Predicted  [6.319606, 0.12999521, 1.5935291, 0.31904262, 0.16959573, 0.13945554, 0.5918711, 1.4853399, -0.5530573]  for true improvements  [0.6, 0.7, 0.5, 0.2, 0.7, 0.5, 0.8, 0.1, 1.0]
+Best MSE Loss: 0.743
+Epoch #67: Train loss [0.1668]; Val loss: MSE [4.3372], L1 [1.2822], G-Mean [0.6919]
+ * Overall: MSE 2.439	L1 1.100	G-Mean 0.662
+ * Many: MSE 2.638	L1 1.048	G-Mean 0.600
+ * Low: MSE 2.040	L1 1.203	G-Mean 0.807
+Predicted  [4.3389263, 0.1626397, 1.6150068, 0.3865712, 0.22318561, 0.30752566, 0.5734586, 1.4750285, -1.0482391]  for true improvements  [0.6, 0.7, 0.5, 0.2, 0.7, 0.5, 0.8, 0.1, 1.0]
+Best MSE Loss: 0.743
+Epoch #68: Train loss [0.1363]; Val loss: MSE [2.4387], L1 [1.0997], G-Mean [0.6622]
+ * Overall: MSE 1.405	L1 0.890	G-Mean 0.531
+ * Many: MSE 0.925	L1 0.702	G-Mean 0.445
+ * Low: MSE 2.366	L1 1.265	G-Mean 0.757
+Predicted  [2.6085882, 0.22197405, 1.5431463, 0.33802822, 0.30957615, 0.39625347, 0.60923296, 1.486993, -1.2702941]  for true improvements  [0.6, 0.7, 0.5, 0.2, 0.7, 0.5, 0.8, 0.1, 1.0]
+Best MSE Loss: 0.743
+Epoch #69: Train loss [0.1460]; Val loss: MSE [1.4053], L1 [0.8900], G-Mean [0.5311]
+ * Overall: MSE 2.612	L1 1.052	G-Mean 0.544
+ * Many: MSE 3.077	L1 1.028	G-Mean 0.476
+ * Low: MSE 1.684	L1 1.099	G-Mean 0.710
+Predicted  [4.752491, 0.22108333, 1.4051293, 0.3466397, 0.3347374, 0.35297787, 0.6803211, 1.4857391, -0.7631974]  for true improvements  [0.6, 0.7, 0.5, 0.2, 0.7, 0.5, 0.8, 0.1, 1.0]
+Best MSE Loss: 0.743
+Epoch #70: Train loss [0.1662]; Val loss: MSE [2.6124], L1 [1.0516], G-Mean [0.5436]
+ * Overall: MSE 5.835	L1 1.327	G-Mean 0.538
+ * Many: MSE 8.105	L1 1.496	G-Mean 0.465
+ * Low: MSE 1.294	L1 0.989	G-Mean 0.720
+Predicted  [7.4821825, 0.16743946, 1.3717201, 0.3945882, 0.31083384, 0.23108402, 0.76994, 1.4728452, -0.39964148]  for true improvements  [0.6, 0.7, 0.5, 0.2, 0.7, 0.5, 0.8, 0.1, 1.0]
+Best MSE Loss: 0.743
+Epoch #71: Train loss [0.1362]; Val loss: MSE [5.8349], L1 [1.3269], G-Mean [0.5377]
+ * Overall: MSE 4.762	L1 1.267	G-Mean 0.544
+ * Many: MSE 6.392	L1 1.380	G-Mean 0.489
+ * Low: MSE 1.503	L1 1.042	G-Mean 0.676
+Predicted  [6.678766, 0.17664208, 1.4363878, 0.33910567, 0.3374281, 0.15734899, 0.83685124, 1.4774661, -0.60983455]  for true improvements  [0.6, 0.7, 0.5, 0.2, 0.7, 0.5, 0.8, 0.1, 1.0]
+Best MSE Loss: 0.743
+Epoch #72: Train loss [0.1090]; Val loss: MSE [4.7623], L1 [1.2674], G-Mean [0.5445]
+ * Overall: MSE 1.991	L1 0.973	G-Mean 0.413
+ * Many: MSE 1.966	L1 0.885	G-Mean 0.412
+ * Low: MSE 2.040	L1 1.151	G-Mean 0.415
+Predicted  [3.8181796, 0.2570293, 1.5415851, 0.22533417, 0.42962375, 0.20680338, 0.8413734, 1.4662399, -1.0618691]  for true improvements  [0.6, 0.7, 0.5, 0.2, 0.7, 0.5, 0.8, 0.1, 1.0]
+Best MSE Loss: 0.743
+Epoch #73: Train loss [0.0830]; Val loss: MSE [1.9908], L1 [0.9735], G-Mean [0.4127]
+ * Overall: MSE 3.301	L1 1.111	G-Mean 0.359
+ * Many: MSE 4.155	L1 1.149	G-Mean 0.318
+ * Low: MSE 1.594	L1 1.035	G-Mean 0.457
+Predicted  [5.448403, 0.23802236, 1.5283848, 0.24137473, 0.41707546, 0.2336456, 0.80592704, 1.4243555, -0.73989224]  for true improvements  [0.6, 0.7, 0.5, 0.2, 0.7, 0.5, 0.8, 0.1, 1.0]
+Best MSE Loss: 0.743
+Epoch #74: Train loss [0.1136]; Val loss: MSE [3.3013], L1 [1.1111], G-Mean [0.3586]
+ * Overall: MSE 9.218	L1 1.487	G-Mean 0.452
+ * Many: MSE 13.380	L1 1.829	G-Mean 0.422
+ * Low: MSE 0.895	L1 0.802	G-Mean 0.519
+Predicted  [9.484581, 0.15713039, 1.4282037, 0.3069714, 0.35730267, 0.23669885, 0.81402975, 1.378391, -0.020100014]  for true improvements  [0.6, 0.7, 0.5, 0.2, 0.7, 0.5, 0.8, 0.1, 1.0]
+Best MSE Loss: 0.743
+Epoch #75: Train loss [0.0898]; Val loss: MSE [9.2184], L1 [1.4868], G-Mean [0.4522]
+ * Overall: MSE 5.565	L1 1.273	G-Mean 0.538
+ * Many: MSE 7.786	L1 1.456	G-Mean 0.508
+ * Low: MSE 1.124	L1 0.907	G-Mean 0.604
+Predicted  [7.3440857, 0.18950252, 1.4279749, 0.33118817, 0.4292215, 0.3643994, 0.94612986, 1.3894237, -0.3007007]  for true improvements  [0.6, 0.7, 0.5, 0.2, 0.7, 0.5, 0.8, 0.1, 1.0]
+Best MSE Loss: 0.743
+Epoch #76: Train loss [0.1111]; Val loss: MSE [5.5655], L1 [1.2729], G-Mean [0.5379]
+ * Overall: MSE 4.096	L1 1.198	G-Mean 0.572
+ * Many: MSE 5.387	L1 1.260	G-Mean 0.478
+ * Low: MSE 1.514	L1 1.075	G-Mean 0.819
+Predicted  [6.1694846, 0.23149303, 1.4878047, 0.45214608, 0.5038817, 0.40110236, 1.0396839, 1.4188766, -0.6548981]  for true improvements  [0.6, 0.7, 0.5, 0.2, 0.7, 0.5, 0.8, 0.1, 1.0]
+Best MSE Loss: 0.743
+Epoch #77: Train loss [0.1005]; Val loss: MSE [4.0958], L1 [1.1985], G-Mean [0.5724]
+ * Overall: MSE 4.049	L1 1.220	G-Mean 0.609
+ * Many: MSE 5.259	L1 1.253	G-Mean 0.478
+ * Low: MSE 1.629	L1 1.155	G-Mean 0.988
+Predicted  [6.095026, 0.22414885, 1.5120332, 0.6257359, 0.5215036, 0.40296763, 1.0604113, 1.4081433, -0.7302659]  for true improvements  [0.6, 0.7, 0.5, 0.2, 0.7, 0.5, 0.8, 0.1, 1.0]
+Best MSE Loss: 0.743
+Epoch #78: Train loss [0.1151]; Val loss: MSE [4.0490], L1 [1.2203], G-Mean [0.6089]
+ * Overall: MSE 5.322	L1 1.311	G-Mean 0.633
+ * Many: MSE 7.316	L1 1.425	G-Mean 0.506
+ * Low: MSE 1.332	L1 1.084	G-Mean 0.993
+Predicted  [7.124192, 0.20790334, 1.4943182, 0.73003733, 0.5074472, 0.37847507, 1.0247128, 1.3835008, -0.43832]  for true improvements  [0.6, 0.7, 0.5, 0.2, 0.7, 0.5, 0.8, 0.1, 1.0]
+Best MSE Loss: 0.743
+Epoch #79: Train loss [0.1222]; Val loss: MSE [5.3217], L1 [1.3113], G-Mean [0.6335]
+ * Overall: MSE 5.658	L1 1.332	G-Mean 0.638
+ * Many: MSE 7.851	L1 1.465	G-Mean 0.513
+ * Low: MSE 1.271	L1 1.066	G-Mean 0.987
+Predicted  [7.366677, 0.21473429, 1.4862329, 0.74969816, 0.5097477, 0.37719524, 1.0413141, 1.3791678, -0.36934698]  for true improvements  [0.6, 0.7, 0.5, 0.2, 0.7, 0.5, 0.8, 0.1, 1.0]
+Best MSE Loss: 0.743
+Epoch #80: Train loss [0.0874]; Val loss: MSE [5.6577], L1 [1.3323], G-Mean [0.6383]
+ * Overall: MSE 6.472	L1 1.381	G-Mean 0.647
+ * Many: MSE 9.126	L1 1.558	G-Mean 0.531
+ * Low: MSE 1.163	L1 1.026	G-Mean 0.961
+Predicted  [7.911286, 0.21944429, 1.4750868, 0.7580356, 0.5067241, 0.36812013, 1.0557998, 1.370088, -0.25094327]  for true improvements  [0.6, 0.7, 0.5, 0.2, 0.7, 0.5, 0.8, 0.1, 1.0]
+Best MSE Loss: 0.743
+Epoch #81: Train loss [0.0787]; Val loss: MSE [6.4718], L1 [1.3808], G-Mean [0.6468]
+ * Overall: MSE 7.500	L1 1.439	G-Mean 0.656
+ * Many: MSE 10.717	L1 1.665	G-Mean 0.551
+ * Low: MSE 1.068	L1 0.987	G-Mean 0.930
+Predicted  [8.538739, 0.21989043, 1.4543425, 0.76027375, 0.49592373, 0.36080518, 1.0721354, 1.3673689, -0.13246706]  for true improvements  [0.6, 0.7, 0.5, 0.2, 0.7, 0.5, 0.8, 0.1, 1.0]
+Best MSE Loss: 0.743
+Epoch #82: Train loss [0.0643]; Val loss: MSE [7.5003], L1 [1.4387], G-Mean [0.6564]
+ * Overall: MSE 8.011	L1 1.461	G-Mean 0.658
+ * Many: MSE 11.520	L1 1.716	G-Mean 0.563
+ * Low: MSE 0.995	L1 0.952	G-Mean 0.898
+Predicted  [8.837889, 0.22096479, 1.4370729, 0.7501992, 0.48910356, 0.3594056, 1.0907186, 1.3593868, -0.046696313]  for true improvements  [0.6, 0.7, 0.5, 0.2, 0.7, 0.5, 0.8, 0.1, 1.0]
+Best MSE Loss: 0.743
+Epoch #83: Train loss [0.0549]; Val loss: MSE [8.0115], L1 [1.4614], G-Mean [0.6580]
+ * Overall: MSE 7.784	L1 1.441	G-Mean 0.651
+ * Many: MSE 11.198	L1 1.696	G-Mean 0.561
+ * Low: MSE 0.957	L1 0.932	G-Mean 0.876
+Predicted  [8.720963, 0.22999996, 1.4231911, 0.73153794, 0.4917288, 0.3667279, 1.1196891, 1.3501036, -0.013205549]  for true improvements  [0.6, 0.7, 0.5, 0.2, 0.7, 0.5, 0.8, 0.1, 1.0]
+Best MSE Loss: 0.743
+Epoch #84: Train loss [0.0455]; Val loss: MSE [7.7843], L1 [1.4411], G-Mean [0.6512]
+ * Overall: MSE 7.286	L1 1.407	G-Mean 0.639
+ * Many: MSE 10.452	L1 1.648	G-Mean 0.549
+ * Low: MSE 0.953	L1 0.926	G-Mean 0.865
+Predicted  [8.441432, 0.2443068, 1.4147474, 0.7069714, 0.49569774, 0.38428602, 1.1542746, 1.3433101, -0.027579105]  for true improvements  [0.6, 0.7, 0.5, 0.2, 0.7, 0.5, 0.8, 0.1, 1.0]
+Best MSE Loss: 0.743
+Epoch #85: Train loss [0.0378]; Val loss: MSE [7.2858], L1 [1.4071], G-Mean [0.6389]
+ * Overall: MSE 6.759	L1 1.372	G-Mean 0.622
+ * Many: MSE 9.656	L1 1.593	G-Mean 0.528
+ * Low: MSE 0.966	L1 0.929	G-Mean 0.861
+Predicted  [8.130849, 0.26216885, 1.4103795, 0.6841253, 0.5016976, 0.40601352, 1.1887745, 1.335866, -0.0660574]  for true improvements  [0.6, 0.7, 0.5, 0.2, 0.7, 0.5, 0.8, 0.1, 1.0]
+Best MSE Loss: 0.743
+Epoch #86: Train loss [0.0325]; Val loss: MSE [6.7591], L1 [1.3718], G-Mean [0.6217]
+ * Overall: MSE 6.534	L1 1.357	G-Mean 0.606
+ * Many: MSE 9.311	L1 1.569	G-Mean 0.509
+ * Low: MSE 0.979	L1 0.932	G-Mean 0.859
+Predicted  [7.991788, 0.27540204, 1.4137657, 0.67005444, 0.50516564, 0.42470834, 1.2116327, 1.3230237, -0.10417452]  for true improvements  [0.6, 0.7, 0.5, 0.2, 0.7, 0.5, 0.8, 0.1, 1.0]
+Best MSE Loss: 0.743
+Epoch #87: Train loss [0.0299]; Val loss: MSE [6.5336], L1 [1.3566], G-Mean [0.6058]
+ * Overall: MSE 7.106	L1 1.391	G-Mean 0.607
+ * Many: MSE 10.189	L1 1.629	G-Mean 0.515
+ * Low: MSE 0.939	L1 0.914	G-Mean 0.843
+Predicted  [8.338554, 0.27924013, 1.4230939, 0.66416395, 0.4966432, 0.42703, 1.2173284, 1.3114207, -0.06505139]  for true improvements  [0.6, 0.7, 0.5, 0.2, 0.7, 0.5, 0.8, 0.1, 1.0]
+Best MSE Loss: 0.743
+Epoch #88: Train loss [0.0330]; Val loss: MSE [7.1058], L1 [1.3907], G-Mean [0.6068]
+ * Overall: MSE 7.554	L1 1.416	G-Mean 0.607
+ * Many: MSE 10.876	L1 1.675	G-Mean 0.519
+ * Low: MSE 0.910	L1 0.900	G-Mean 0.831
+Predicted  [8.599144, 0.2814139, 1.4357582, 0.6615687, 0.4881692, 0.4286723, 1.2116902, 1.3049667, -0.032095335]  for true improvements  [0.6, 0.7, 0.5, 0.2, 0.7, 0.5, 0.8, 0.1, 1.0]
+Best MSE Loss: 0.743
+Epoch #89: Train loss [0.0298]; Val loss: MSE [7.5541], L1 [1.4163], G-Mean [0.6070]
+ * Overall: MSE 7.649	L1 1.422	G-Mean 0.606
+ * Many: MSE 11.023	L1 1.686	G-Mean 0.519
+ * Low: MSE 0.901	L1 0.895	G-Mean 0.827
+Predicted  [8.652139, 0.28545752, 1.4542506, 0.65959096, 0.48368543, 0.4305252, 1.2084647, 1.3020312, -0.023287386]  for true improvements  [0.6, 0.7, 0.5, 0.2, 0.7, 0.5, 0.8, 0.1, 1.0]
+Best MSE Loss: 0.743
+Epoch #90: Train loss [0.0321]; Val loss: MSE [7.6490], L1 [1.4222], G-Mean [0.6062]
+ * Overall: MSE 7.492	L1 1.413	G-Mean 0.604
+ * Many: MSE 10.786	L1 1.672	G-Mean 0.516
+ * Low: MSE 0.903	L1 0.896	G-Mean 0.827
+Predicted  [8.561759, 0.29048008, 1.4706377, 0.65791607, 0.4819302, 0.4321127, 1.2044955, 1.2975243, -0.032370284]  for true improvements  [0.6, 0.7, 0.5, 0.2, 0.7, 0.5, 0.8, 0.1, 1.0]
+Best MSE Loss: 0.743
+Epoch #91: Train loss [0.0321]; Val loss: MSE [7.4916], L1 [1.4134], G-Mean [0.6042]
+ * Overall: MSE 7.179	L1 1.395	G-Mean 0.601
+ * Many: MSE 10.312	L1 1.642	G-Mean 0.511
+ * Low: MSE 0.914	L1 0.901	G-Mean 0.832
+Predicted  [8.380289, 0.29422036, 1.4809238, 0.65971154, 0.4816347, 0.43456933, 1.2005789, 1.2941853, -0.050353356]  for true improvements  [0.6, 0.7, 0.5, 0.2, 0.7, 0.5, 0.8, 0.1, 1.0]
+Best MSE Loss: 0.743
+Epoch #92: Train loss [0.0296]; Val loss: MSE [7.1792], L1 [1.3951], G-Mean [0.6009]
+ * Overall: MSE 7.600	L1 1.418	G-Mean 0.606
+ * Many: MSE 10.961	L1 1.684	G-Mean 0.520
+ * Low: MSE 0.878	L1 0.886	G-Mean 0.824
+Predicted  [8.626387, 0.2879137, 1.4824367, 0.6702206, 0.47267663, 0.43133032, 1.1884187, 1.2888963, 0.00044485228]  for true improvements  [0.6, 0.7, 0.5, 0.2, 0.7, 0.5, 0.8, 0.1, 1.0]
+Best MSE Loss: 0.743
+Epoch #93: Train loss [0.0233]; Val loss: MSE [7.5999], L1 [1.4182], G-Mean [0.6059]
+ * Overall: MSE 7.920	L1 1.437	G-Mean 0.610
+ * Many: MSE 11.449	L1 1.715	G-Mean 0.525
+ * Low: MSE 0.864	L1 0.881	G-Mean 0.822
+Predicted  [8.806906, 0.28301752, 1.4799637, 0.677653, 0.46570474, 0.42973346, 1.1799502, 1.2825515, 0.017062932]  for true improvements  [0.6, 0.7, 0.5, 0.2, 0.7, 0.5, 0.8, 0.1, 1.0]
+Best MSE Loss: 0.743
+Epoch #94: Train loss [0.0226]; Val loss: MSE [7.9205], L1 [1.4368], G-Mean [0.6097]
+ * Overall: MSE 7.451	L1 1.410	G-Mean 0.599
+ * Many: MSE 10.728	L1 1.667	G-Mean 0.507
+ * Low: MSE 0.897	L1 0.897	G-Mean 0.836
+Predicted  [8.540076, 0.28842893, 1.4748125, 0.6778652, 0.46916938, 0.43951377, 1.1813402, 1.277686, -0.036552794]  for true improvements  [0.6, 0.7, 0.5, 0.2, 0.7, 0.5, 0.8, 0.1, 1.0]
+Best MSE Loss: 0.743
+Epoch #95: Train loss [0.0263]; Val loss: MSE [7.4507], L1 [1.4101], G-Mean [0.5988]
+ * Overall: MSE 7.131	L1 1.392	G-Mean 0.585
+ * Many: MSE 10.233	L1 1.632	G-Mean 0.486
+ * Low: MSE 0.926	L1 0.912	G-Mean 0.847
+Predicted  [8.351952, 0.2933042, 1.468253, 0.6790747, 0.47233087, 0.45094547, 1.1864336, 1.2745259, -0.08109493]  for true improvements  [0.6, 0.7, 0.5, 0.2, 0.7, 0.5, 0.8, 0.1, 1.0]
+Best MSE Loss: 0.743
+Epoch #96: Train loss [0.0230]; Val loss: MSE [7.1308], L1 [1.3916], G-Mean [0.5849]
+ * Overall: MSE 7.325	L1 1.402	G-Mean 0.579
+ * Many: MSE 10.529	L1 1.649	G-Mean 0.479
+ * Low: MSE 0.917	L1 0.908	G-Mean 0.845
+Predicted  [8.466792, 0.2958015, 1.4585415, 0.68081385, 0.47150663, 0.45543158, 1.189776, 1.2690012, -0.074436605]  for true improvements  [0.6, 0.7, 0.5, 0.2, 0.7, 0.5, 0.8, 0.1, 1.0]
+Best MSE Loss: 0.743
+Epoch #97: Train loss [0.0198]; Val loss: MSE [7.3252], L1 [1.4018], G-Mean [0.5789]
+ * Overall: MSE 7.376	L1 1.401	G-Mean 0.571
+ * Many: MSE 10.614	L1 1.652	G-Mean 0.471
+ * Low: MSE 0.900	L1 0.899	G-Mean 0.837
+Predicted  [8.500085, 0.3001353, 1.4524045, 0.6770163, 0.47166252, 0.45940548, 1.1931621, 1.2647325, -0.056491423]  for true improvements  [0.6, 0.7, 0.5, 0.2, 0.7, 0.5, 0.8, 0.1, 1.0]
+Best MSE Loss: 0.743
+Epoch #98: Train loss [0.0198]; Val loss: MSE [7.3763], L1 [1.4014], G-Mean [0.5708]
+ * Overall: MSE 7.038	L1 1.378	G-Mean 0.557
+ * Many: MSE 10.106	L1 1.618	G-Mean 0.454
+ * Low: MSE 0.902	L1 0.900	G-Mean 0.836
+Predicted  [8.3047905, 0.3078674, 1.4515002, 0.6730682, 0.47516358, 0.46590608, 1.1997364, 1.2627751, -0.06279718]  for true improvements  [0.6, 0.7, 0.5, 0.2, 0.7, 0.5, 0.8, 0.1, 1.0]
+Best MSE Loss: 0.743
+Epoch #99: Train loss [0.0186]; Val loss: MSE [7.0378], L1 [1.3784], G-Mean [0.5569]
+========================================================================================================================
+Test best model on testset...
+Loaded best model, epoch 65, best val loss 0.7433
+ * Overall: MSE 2.099	L1 0.887	G-Mean 0.476
+ * Many: MSE 0.112	L1 0.316	G-Mean 0.296
+ * Low: MSE 10.048	L1 3.170	G-Mean 3.170
+Predicted  [0.48672143, -2.8698623, 0.5042397, 0.871924, 1.1816977]  for true improvements  [0.8, 0.3, 0.8, 0.7, 0.7]
+Test loss: MSE [2.0990], L1 [0.8865], G-Mean [0.4756]
+Done

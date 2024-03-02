@@ -592,7 +592,7 @@ def make_feature_matrix(X_all_c,pre_metric,dose,scaler,all_roi,slices):
         scaler.fit(X)
         X = scaler.transform(X)
     else:
-        X = X_all_c.reshape(X_all_c.shape[0],((X_all_c.shape[1])*X_all_c.shape[2]))
+        X = X_all_c.reshape(X_all_c.shape[0],-1)
         X = np.append(X,pre_metric.reshape(-1,1),1)
         X = np.append(X,dose.reshape(-1,1),1)
         scaler.fit(X)
@@ -626,7 +626,7 @@ def scale_feature_matrix(X_test,pre_metric_test,dose_test,scaler,all_roi,slices)
         X = X.reshape(X.shape[0],((X.shape[1])*X.shape[2]))
         X = scaler.transform(X)
     else:
-        X = X_test.reshape(X_test.shape[0],((X_test.shape[1])*X_test.shape[2]))
+        X = X_test.reshape(X_test.shape[0],-1)
         X = np.append(X,pre_metric_test.reshape(1,-1),1)
         X = np.append(X,dose_test.reshape(1,-1),1)
         X = scaler.transform(X)
