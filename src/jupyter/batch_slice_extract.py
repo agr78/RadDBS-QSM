@@ -45,6 +45,7 @@ npy_dir = '/media/mts_dbs/dbs/all/npy/'
 phi_dir = '/media/mts_dbs/dbs/all/phi/'
 roi_path = '/data/Ali/atlas/mcgill_pd_atlas/PD25-subcortical-labels.csv'
 
-packet = [*zip(qsms[:],segs[:],[npy_dir]*len(case_id[:]),[phi_dir]*len(case_id[:]),[roi_path]*len(case_id[:]),case_id[:],[suffix]*len(case_id[:]),[True]*len(case_id[:]))]
+# Change last argument to get slices
+packet = [*zip(qsms[:],segs[:],[npy_dir]*len(case_id[:]),[phi_dir]*len(case_id[:]),[roi_path]*len(case_id[:]),case_id[:],[suffix]*len(case_id[:]),[False]*len(case_id[:]))]
 pool = Pool(os.cpu_count()-5)
 results = pool.starmap(extract,packet)
