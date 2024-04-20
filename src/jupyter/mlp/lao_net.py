@@ -8,6 +8,7 @@ from scipy.stats import linregress
 from scipy.spatial import cKDTree
 from sklearn.model_selection import train_test_split
 from util import get_neighbors, l1, neighboring_features
+from datasets import elastic_augment_dataset
 from joblib import Parallel, delayed
 
 # Matrix product Aw for Lasso cost function
@@ -26,7 +27,6 @@ class Net(nn.Module):
         self.conv4 = nn.Conv2d(in_channels=self.n_channels, out_channels=self.n_channels, kernel_size=3)
         self.conv5 = nn.Conv2d(in_channels=self.n_channels, out_channels=self.n_channels, kernel_size=3)
         n_layers = 4
-        print('Using constant kernel and channel sizes')
         self.out_size = (self.n_channels,54,54)
         #                  (self.in_size-(n_layers)*(self.conv5.kernel_size[0]-1),
         #                  self.in_size-(n_layers)*(self.conv5.kernel_size[0]-1),
@@ -51,11 +51,11 @@ class Net(nn.Module):
     # Forward pass
     def forward(self, x, u):
         z = self.encode(x)
-        y = self.r(torch.concat((z.view(z.shape[0],-1),u),dim=1))
+        y = self.r(torch.concat((z.view(z.shape[0],-1),u.view(u.shape[0],-1)),dim=1))
         return y
 
 # Train model to find w*
-def train_model(X_all,y_all,u_all,model,X_test,u_test,warm_start_weights,early_stopping,tol,lr,lr_decay,alpha,reg_type,thresh,num_epochs,batch_size,num_neighbors,random_val,verbose,save_state,case_id):
+def train_model(X_all,y_all,u_all,model,X_test,u_test,warm_start_weights,early_stopping,tol,lr,lr_decay,alpha,reg_type,thresh,num_epochs,batch_size,num_neighbors,random_val,verbose,save_state,factor,case_id):
     val_synth = 0
     yh_l = 0
     pcount = 0
@@ -80,22 +80,25 @@ def train_model(X_all,y_all,u_all,model,X_test,u_test,warm_start_weights,early_s
                 np.random.seed(0)
                 n_vals = np.random.choice(len(y_all)-1,num_neighbors,replace=False)
             else:
+                idy_all = np.squeeze(get_neighbors(y_all.reshape(-1, 1)))
                 n_vals = cKDTree(X_all).query(X_test, k=num_neighbors)[1]
-            idy_all = np.squeeze(get_neighbors(y_all.reshape(-1, 1)))
-            X_val = torch.Tensor(X_all[n_vals, :]).cuda()
+                Xn_val = neighboring_features(torch.squeeze(X_all).cpu(),idy_val)
+                idy = np.delete(idy_all,n_vals,axis=0)
+                idy_val = idy_all[n_vals]
+                if verbose > 1 and num_neighbors > 0:
+                    print('Validation labels',str(y_val),'have nearest neighbors',str(y_all[idy_val]))
+    
+            X_val = torch.unsqueeze(torch.Tensor(X_all[n_vals, :]),dim=1).cuda()
             y_val = torch.Tensor(y_all[n_vals].T).cuda()
+            u_val = torch.Tensor(u_all[n_vals,:]).cuda()
             y_train = torch.Tensor(np.delete(y_all,n_vals,axis=0)).cuda()
             X_train = torch.unsqueeze(torch.Tensor(np.delete(X_all,n_vals,axis=0)).cuda(),axis=1)
-            u_train = torch.unsqueeze(torch.Tensor(u_all).cuda(),axis=1)
-            idy = np.delete(idy_all,n_vals,axis=0)
-            idy_val = idy_all[n_vals]
+            u_train = torch.unsqueeze(torch.Tensor(np.delete(u_all,n_vals,axis=0)).cuda(),axis=1)
             X_all = torch.unsqueeze(torch.Tensor(X_all).cuda(),axis=1)
             y_all = torch.unsqueeze(torch.Tensor(y_all).cuda(),axis=1)
             u_all = torch.Tensor(u_all).cuda()
             n_cases = X_all.shape[0]
-            Xn_val = neighboring_features(torch.squeeze(X_all).cpu(),idy_val)
-            if verbose > 1 and num_neighbors > 0:
-                print('Validation labels',str(y_val),'have nearest neighbors',str(y_all[idy_val]))
+  
     # Train on whole dataset
     else:
         X_train = torch.unsqueeze(torch.Tensor(X_all).cuda(),axis=1)
@@ -116,14 +119,16 @@ def train_model(X_all,y_all,u_all,model,X_test,u_test,warm_start_weights,early_s
     # Define optimizer
     if reg_type == 'l2':
         optimizer = optim.SGD(model.parameters(), lr=lr, weight_decay=alpha, momentum=0.9)
+        #optimizer = optim.Adam(model.parameters(),lr=lr,amsgrad=True,weight_decay=alpha)
     else:
         optimizer = optim.SGD(model.parameters(), lr=lr, momentum=0.9)
+        #optimizer = optim.Adam(model.parameters(),lr=lr,amsgrad=True)
     step = 0
     scheduler = optim.lr_scheduler.StepLR(optimizer, step_size=lr_decay, gamma=0.1)
     num_batches = int(n_cases/batch_size)
 
     # Model details
-    if verbose > 0:
+    if verbose > 2:
         print('Creating',str(num_batches),'batchs of size',str(batch_size),'from',str(n_cases),'training cases')
         model_parameters = filter(lambda p: p.requires_grad, model.parameters())
         params = sum([np.prod(p.size()) for p in model_parameters])
@@ -133,7 +138,10 @@ def train_model(X_all,y_all,u_all,model,X_test,u_test,warm_start_weights,early_s
             print('Warm start enabled')
         if thresh != []:
             print('Threshold',str(thresh),'enabled')
-
+    
+    X_val = X_val.cpu()
+    y_val = y_val.cpu().ravel().tolist()
+    u_val = u_val.cpu()
     # Training loop
     for epoch in range(num_epochs):
         model.train()
@@ -143,6 +151,9 @@ def train_model(X_all,y_all,u_all,model,X_test,u_test,warm_start_weights,early_s
             X_batch = X_train[int(batch_size*batch_case):int(batch_size*(batch_case+1)),:]
             y_batch = y_train[int(batch_size*batch_case):int(batch_size*(batch_case+1))]
             u_batch = u_train[int(batch_size*batch_case):int(batch_size*(batch_case+1))]
+            if factor > 0:
+                X_batch, y_batch, subsc, u_batch = elastic_augment_dataset(X_batch.cpu(),factor,y_batch.cpu(),np.linspace(0,len(y_batch)),u_batch.cpu())
+                X_valb, y_valb, subscv, u_valb = elastic_augment_dataset(X_val,factor,y_val,np.linspace(0,len(y_val)),u_val)
             N = len(y_batch)
             if reg_type == 'l1':
                 L_params = [x.view(-1) for x in model.parameters()]
@@ -165,10 +176,11 @@ def train_model(X_all,y_all,u_all,model,X_test,u_test,warm_start_weights,early_s
 
             # Evaluate
             optimizer.zero_grad()
-            yh = model(X_batch,u_batch)
+
+            yh = model(torch.unsqueeze(torch.squeeze(torch.stack(X_batch)),dim=1).cuda(),torch.Tensor(u_batch).cuda())
             yh = yh.cuda()
             # Lasso loss function (or latent distance, depending on reg_type)
-            loss = (1/(2*N))*l2(torch.squeeze(yh),torch.squeeze(y_batch))+alpha*l1_reg
+            loss = (1/(2*N))*l2(torch.squeeze(yh),torch.squeeze(torch.Tensor(y_batch).cuda()))+alpha*l1_reg
             train_curve[epoch] = loss.detach().cpu()
             loss.backward()
             train_loss += loss
@@ -176,18 +188,19 @@ def train_model(X_all,y_all,u_all,model,X_test,u_test,warm_start_weights,early_s
             # Optional validation loss
             if num_neighbors > 0:
                 model.eval()
-                yh_val = model(X_val)
-                val_loss = (1/(2*N))*l2(torch.squeeze(yh_val),y_val)+alpha*l1_reg_val
+                yh_val = model(torch.unsqueeze(torch.squeeze(torch.stack(X_valb)),dim=1).cuda(),torch.Tensor(u_valb).cuda())
+                val_loss = (1/(2*N))*l2(torch.squeeze(yh_val),torch.squeeze(torch.Tensor(y_valb)).cuda())+alpha*l1_reg_val
                 val_curve[epoch] = val_loss.detach().cpu()
                 if val_loss < best_loss:
                     best_loss = val_loss
                     best_epoch = epoch
-                    if verbose > 1:
+                    if verbose > 2:
                         print('Best validation loss:',str(val_loss.item()),
                             'at learning rate',str(optimizer.param_groups[0]['lr']),
                             'and epoch',epoch)
                     model_path = './trained_models/lao_net/model_{}.pth'.format(case_id)
-                    torch.save(model.state_dict(), model_path)
+                    best_model = model
+                 
 
             # Training loss 
             else:
@@ -206,7 +219,7 @@ def train_model(X_all,y_all,u_all,model,X_test,u_test,warm_start_weights,early_s
 
             # Training progres
             optimizer.step()
-            if verbose > 1:
+            if verbose > 2:
                 if epoch % 10 == 0:
                     if reg_type == 'latent_dist' and verbose > 2:
                         print('Training batch labels',str(y_batch),'have neighbors',str(y_all[idy_batch]))
@@ -215,7 +228,7 @@ def train_model(X_all,y_all,u_all,model,X_test,u_test,warm_start_weights,early_s
                         int(batch_case+1),
                         int(num_batches), 100.*(batch_case/num_batches),
                         loss))
-                    print(optimizer.param_groups[0]['lr'])
+                    print('At learning rate:',optimizer.param_groups[0]['lr'])
 
         # Learning rate decay
         if lr_decay != None:
@@ -226,13 +239,13 @@ def train_model(X_all,y_all,u_all,model,X_test,u_test,warm_start_weights,early_s
             if epoch % lr_decay == 0 and epoch > 0:
                 step = step+1
 
-        if num_neighbors > 0:
-            y_val_list = np.asarray(['%.2f' % j for j in y_val],dtype=float)
+        if num_neighbors > 0 and verbose > 2:
+            #y_val_list = np.asarray(['%.2f' % j for j in y_val],dtype=float)
             print('====> Epoch: {} Average loss: {:.4f} Best validation loss: {:.4f} at epoch: {}'.
                 format(epoch+1,
                 train_loss/(num_epochs*len(y_train[int(batch_size*batch_case):int(batch_size*(batch_case+1))])),
                 best_loss,best_epoch+1))
-            print('Using neighbors',y_val_list,'for validation')
+            print('Using neighbors',y_val,'for validation')
         
         # Early stopping
         if early_stopping != []:
@@ -244,15 +257,17 @@ def train_model(X_all,y_all,u_all,model,X_test,u_test,warm_start_weights,early_s
                 break
             
     # Load best epoch and predict test case
+    torch.save(model.state_dict(), model_path)
     model.load_state_dict(torch.load(model_path))
     model.eval()
+    
     if verbose > 0:
         if early_stopping != []:
             print('Early stopping occuring at epoch',str(epoch))
-        print('Predicted',str(yh.mT),'for',str(y_train.mT))
-        print('Testing on best loss:',str(best_loss.item()),'from epoch',str(best_epoch))
-    yh = model(torch.unsqueeze(torch.Tensor(X_test).cuda(),axis=0),torch.unsqueeze(torch.Tensor(u_test).cuda(),axis=0))   
+        print('Predicted',str(yh.mT),'for',str(y_batch))
+        print('Testing on best loss:',str(best_loss.item()),'from epoch',str(best_epoch),'with validation samples',y_val)
     
+    yh = model(torch.unsqueeze(torch.Tensor(X_test).cuda(),axis=0),torch.unsqueeze(torch.Tensor(u_test).cuda(),axis=0))   
     if save_state == False and warm_start_weights == []:
         os.remove(model_path)
     return yh, model, [X_train, y_train, X_val, y_val, train_curve, val_curve]
