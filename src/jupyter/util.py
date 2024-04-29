@@ -31,6 +31,7 @@ import nibabel as nib
 import torch
 from torch import nn
 from PIL import Image
+import re
 try:
     from torchvision.models.feature_extraction import create_feature_extractor
 except:
@@ -356,6 +357,7 @@ def load_featstruct(phi_directory,X_directory,R_directory,K_directory,n_rois,n_f
     for feature_matrix in phi_directory_struct:
         with open(phi_directory+feature_matrix, "rb") as fp:  
             if slices == True:
+                print('Check ID all, incorrect!')
                 if len(feature_matrix) == 10:
                     ID_all.append(feature_matrix[-6:-4])
                 else:
@@ -367,7 +369,9 @@ def load_featstruct(phi_directory,X_directory,R_directory,K_directory,n_rois,n_f
             else:
                 Phi_case = pickle.load(fp)
                 Phi_all.append(Phi_case)
-                ID_all.append(feature_matrix[-2:])
+                print(feature_matrix)
+                case_ids = str(feature_matrix).split("_",1)[1]
+                ID_all.append(case_ids)
     n_cases = len(np.asarray(ID_all))
     print(ID_all)
     X_all = np.zeros((n_cases,n_rois,n_features))

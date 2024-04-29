@@ -33,13 +33,14 @@ from util import extract
 from loader import data_loader
 from IPython.display import HTML
 import time
+import re
 # Load data
 debug = 1
 reload = 1
 suffix = '115_'
 # Provide paths
 segs = full_path('/home/ali/RadDBS-QSM/data/nii/new_seg/')
-qsms = full_path('/home/ali/RadDBS-QSM/data/nii/qsm/')
+qsms = full_path('/home/ali/RadDBS-QSM/data/nii/new_qsm/')
 case_id = []
 voxel_size = ((0.5, 0.5, 0.5))
 # Save location
@@ -48,15 +49,17 @@ phi_dir = '/home/ali/RadDBS-QSM/data/phi/new/'
 roi_path = '/home/ali/RadDBS-QSM/data/xlxs/new_segs.csv'
 # Save case IDs
 for cases in qsms:
-    if os.path.isfile('/home/ali/RadDBS-QSM/data/nii/new_seg/seg_'+cases[-9:-7]+'.nii.gz'):
-        print('Found','/home/ali/RadDBS-QSM/data/nii/new_seg/seg_'+cases[-9:-7]+'.nii.gz')
-        case_id.append(cases[-9:-7])
+    result = result = re.search('/home/ali/RadDBS-QSM/data/nii/new_qsm/qsm_(.*)_e10_imaginary.nii.gz',cases)
+    case_ids = result.group(1)
+    if os.path.isfile('/home/ali/RadDBS-QSM/data/nii/new_seg/seg_'+case_ids+'.nii.gz'):
+        print('Found','/home/ali/RadDBS-QSM/data/nii/new_seg/seg_'+case_ids+'.nii.gz')
+        case_id.append(case_ids)
         if debug == 1:
-            extract(cases,'/home/ali/RadDBS-QSM/data/nii/new_seg/seg_'+cases[-9:-7]+'.nii.gz',
-                npy_dir,phi_dir,roi_path,cases[-9:-7],suffix,voxel_size,False,False,False,[0,1,2,5,6,7,8])
+            extract(cases,'/home/ali/RadDBS-QSM/data/nii/new_seg/seg_'+case_ids+'.nii.gz',
+                npy_dir,phi_dir,roi_path,case_ids,suffix,voxel_size,False,False,False,[0,1,2,5,6,7,8])
     else:
-        print('Missing','/home/ali/RadDBS-QSM/data/nii/new_seg/seg_'+cases[-9:-7]+'.nii.gz')
-
+        print('Missing','/home/ali/RadDBS-QSM/data/nii/new_seg/seg_'+case_ids+'.nii.gz')
+        print(cases)
 # Parallel extraction
 if debug == 0:
     packet = [*zip(qsms[:],segs[:],[npy_dir]*len(case_id),
