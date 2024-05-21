@@ -855,7 +855,7 @@ def scale_feature_matrix(X_test,idx,pre_metric_test,dose_test,age,sex,rce,eth,dd
             X = np.append(X,phy[idx].reshape(1,-1),1)
         if tgt is not None:
             X = np.append(X,tgt[idx].reshape(1,-1),1)
-        if tgt is not None:
+        if tms is not None:
             X = np.append(X,tms[idx].reshape(1,-1),1)
         X = scaler.transform(X)
     return X
