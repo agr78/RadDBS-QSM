@@ -1,6 +1,6 @@
-src/jupyter/archive/
 src/jupyter/validation/
 src/jupyter/pickles/
 src/jupyter/old/
 src/jupyter/phi/
 src/jupyter/npy/
+src/jupyter/archive/npy
