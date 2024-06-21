@@ -353,6 +353,10 @@ def load_featstruct(phi_directory,X_directory,R_directory,K_directory,n_rois,n_f
     X_directory_struct  = sorted(os.listdir(X_directory))
     R_directory_struct  = sorted(os.listdir(R_directory))
     K_directory_struct  = sorted(os.listdir(K_directory))
+    print(X_directory_struct)
+    # print(K_directory_struct)
+    # print(R_directory_struct)
+    # print(phi_directory_struct)
     # Load feature dictionary
     for feature_matrix in phi_directory_struct:
         with open(phi_directory+feature_matrix, "rb") as fp:  
@@ -369,12 +373,13 @@ def load_featstruct(phi_directory,X_directory,R_directory,K_directory,n_rois,n_f
             else:
                 Phi_case = pickle.load(fp)
                 Phi_all.append(Phi_case)
-                print(feature_matrix)
                 case_ids = str(feature_matrix).split("_",1)[1]
                 ID_all.append(case_ids)
     n_cases = len(np.asarray(ID_all))
-    print(ID_all)
     X_all = np.zeros((n_cases,n_rois,n_features))
+    # print(n_cases)
+    # print(n_rois)
+    # print(n_features)
     R_all = np.zeros((n_cases,n_rois,n_features)).astype(str)
     K_all = np.zeros((n_cases,n_rois,n_features)).astype(str)
     # Load feature arrays
@@ -403,6 +408,7 @@ def load_featstruct(phi_directory,X_directory,R_directory,K_directory,n_rois,n_f
         for feature_matrix in X_directory_struct:
             X_case = np.load(X_directory+feature_matrix)
             X_all[count,:,:] = X_case.reshape((n_rois,n_features)).transpose((0,1))
+            #print('Loading index',count,'with features from',feature_matrix)
             count = count+1
         # Load ROI indices
         count = 0
@@ -737,6 +743,23 @@ def get_full_cases(df,h0,h1,h2,h3,h4,h5,h6,h7,h8,h9,h10,h11,h12,h13):
     tms = h13a[idx]
     return subs, pre_imp, true_imp, pre_updrs_off, ledd, age, sex, eth, rce, dd, phy, loc, tgt, tms
 
+def get_fullc_cases(df,h0,h1,h2,h3,h4):
+    h0a = pd.to_numeric(df[h0],errors='coerce').to_numpy().astype('float')
+    h1a = df[h1].to_numpy().astype('float')
+    h2a = df[h2].to_numpy().astype('float')
+    h3a = df[h3].to_numpy().astype('float')
+    h4a = df[h4].to_numpy().astype('float')
+
+    print(df)
+    idx = ~np.isnan(h3a+h2a+h1a+h0a)
+    subs = h0a[idx]
+    pre_updrs_off = h1a[idx]
+    pre_imp = (h1a[idx]-h2a[idx])/h1a[idx]
+    true_imp = (h1a[idx]-h3a[idx])/h1a[idx]
+    ledd = h4a[idx]
+  
+    return subs, pre_imp, true_imp, pre_updrs_off, ledd,
+
 def re_index(X_all,K_all,R_all,c_cases_idx,subs,ids,all_rois,pre_imp,pre_updrs_off,post_imp,dose):
     X_all_c = X_all[c_cases_idx,:,:]
     K_all_c = K_all[c_cases_idx,:,:]
@@ -749,7 +772,7 @@ def re_index(X_all,K_all,R_all,c_cases_idx,subs,ids,all_rois,pre_imp,pre_updrs_o
     post_imp = post_imp[s_cases_idx]
     pre_updrs_off = pre_updrs_off[s_cases_idx]
     dose = dose[s_cases_idx]
-    per_change = post_imp
+    per_change = (pre_updrs_off-post_imp)/pre_updrs_off
     # Reshape keys and ROIs
     if all_rois == True:
         K_all_cu = np.empty((K_all_c.shape[0],K_all_c.shape[1],K_all_c.shape[2]+1),dtype=object)
@@ -761,8 +784,37 @@ def re_index(X_all,K_all,R_all,c_cases_idx,subs,ids,all_rois,pre_imp,pre_updrs_o
         K = K_all_c.reshape((K_all_c.shape[0],K_all_c.shape[1]*K_all_c.shape[2]))[0]
         K = np.append(K,['pre_updrs'],0)
         R = R_all_c.reshape((R_all_c.shape[0],R_all_c.shape[1]*R_all_c.shape[2]))
-    return X_all_c, K, R, subsc, pre_imp, pre_updrs_off, per_change, dose
+    return X_all_c, K, R, subsc, pre_imp, pre_updrs_off, per_change, dose, s_cases_idx
 
+
+def fmre_index(X_all,K_all,R_all,c_cases_idx,subs,ids,all_rois,pre_imp,pre_updrs_off,post_imp,dose):
+    X_all_c = X_all[c_cases_idx,:,:]
+    K_all_c = K_all[c_cases_idx,:,:]
+    R_all_c = R_all[c_cases_idx,:,:]
+    # Re-index the scored subjects with respect to complete cases
+    idsc = ids[np.in1d(ids,subs)]
+    idx = np.zeros((1,len(idsc)))
+    for j in np.arange(len(idsc)):
+        idx[:,j] = int(np.where(idsc[j]==subs)[0][0])
+    idx = idx.astype(int)
+    subsc = np.squeeze(subs[idx])
+    pre_imp =  np.squeeze(pre_imp[idx])
+    post_imp =  np.squeeze(post_imp[idx])
+    pre_updrs_off =  np.squeeze(pre_updrs_off[idx])
+    dose =  np.squeeze(dose[idx])
+    per_change = (pre_updrs_off-post_imp)/pre_updrs_off
+    # Reshape keys and ROIs
+    if all_rois == True:
+        K_all_cu = np.empty((K_all_c.shape[0],K_all_c.shape[1],K_all_c.shape[2]+1),dtype=object)
+        K_all_cu[:,:,:-1] = K_all_c
+        K_all_cu[:,:,-1] = 'pre_updrs'
+        K = K_all_cu.reshape((K_all_cu.shape[0],K_all_cu.shape[1]*K_all_cu.shape[2]))[0]
+        R = R_all_c.reshape((R_all_c.shape[0],R_all_c.shape[1]*R_all_c.shape[2]))
+    else:
+        K = K_all_c.reshape((K_all_c.shape[0],K_all_c.shape[1]*K_all_c.shape[2]))[0]
+        K = np.append(K,['pre_updrs'],0)
+        R = R_all_c.reshape((R_all_c.shape[0],R_all_c.shape[1]*R_all_c.shape[2]))
+    return X_all_c, K, R, subsc, pre_imp, pre_updrs_off, per_change, dose, idx
 
 def set_split(X,y,N,tp):
     sss = sms.ShuffleSplit(n_splits=N, test_size=tp)
@@ -1142,3 +1194,19 @@ def focal_loss(output,target,beta,gamma):
     sigmoid = nn.Sigmoid()
     ei = torch.norm(target-output,1)
     loss = torch.mean(sigmoid((torch.abs(beta*ei,1)**gamma)*ei))
+
+def classification_accuracy(y_pred,y_true):
+    acc = np.sum(y_pred==y_true)/len(y_true)
+    return acc
+
+def classification_specificity(y_pred,y_true):
+    tn = np.sum((y_pred==0)==(y_true==0))
+    fp = np.sum(np.logical_and((y_pred==1).astype(int),(y_true==0).astype(int)))
+    spf = tn/(tn+fp)
+    return spf
+
+def classification_sensitivity(y_pred,y_true):
+    tp = np.sum((y_pred==1)==(y_true==1))
+    fn = np.sum(np.logical_and((y_pred==0).astype(int),(y_pred==1).astype(int)))
+    sns = tp/(tp+fn)
+    return sns
