@@ -64,14 +64,14 @@ def next_slice(ax):
     ax.index = (ax.index+1) % volume.shape[0]
     ax.images[0].set_array(volume[ax.index])
 
-def pyvis(volume,figx,figy):
+def pyvis(volume,figx,figy,colormap):
     plt.style.use('dark_background')
     plt.rcParams["figure.figsize"] = (figx,figy)
     remove_keymap_conflicts({'j', 'k'})
     fig, ax = plt.subplots()
     ax.volume = volume
     ax.index = volume.shape[0]//2
-    ax.imshow(volume[ax.index])
+    ax.imshow(volume[ax.index],cmap=colormap)
     fig.canvas.mpl_connect('key_press_event', process_key)
     
 

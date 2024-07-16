@@ -32,6 +32,7 @@ import torch
 from torch import nn
 from PIL import Image
 import re
+import nrrd
 try:
     from torchvision.models.feature_extraction import create_feature_extractor
 except:
@@ -64,23 +65,34 @@ def previous_slice(ax):
     volume = ax.volume
     ax.index = (ax.index-1) % volume.shape[0] 
     ax.images[0].set_array(volume[ax.index])
+    ax.set_title('Slice '+str(ax.index))
+
 
 def next_slice(ax):
     volume = ax.volume
     ax.index = (ax.index+1) % volume.shape[0]
     ax.images[0].set_array(volume[ax.index])
+    ax.set_title('Slice '+str(ax.index))
 
-def pyvis(volume,figx,figy):
+def pyvis(volume,figx,figy,colormap,w,l,cmin,cmax):
     plt.style.use('dark_background')
     plt.rcParams["figure.figsize"] = (figx,figy)
     remove_keymap_conflicts({'j', 'k'})
     fig, ax = plt.subplots()
     ax.volume = volume
-    print(ax.volume.shape)
     ax.index = volume.shape[0]//2
-    print(ax.index)
-    ax.imshow(volume[ax.index])
+    volume[volume<-((w-l)//2)] = -(w-l)//2
+    volume[volume>((w-l)//2)] = (w-l)//2
+    im = ax.imshow(volume[ax.index],cmap=colormap,vmin=cmin, vmax=cmax)
+   
+    divider = make_axes_locatable(ax)
+    cax = divider.append_axes("right", size="5%", pad=0.05)
+    fig.colorbar(im, cax=cax, orientation='vertical')
+    ax.set_xticks([])
+    ax.set_yticks([])
     fig.canvas.mpl_connect('key_press_event', process_key)
+    ax.set_axis_off()
+    plt.show()
     
 def exclude_outliers(x):
     q3 = np.percentile(x,75)
@@ -1210,3 +1222,32 @@ def classification_sensitivity(y_pred,y_true):
     fn = np.sum(np.logical_and((y_pred==0).astype(int),(y_pred==1).astype(int)))
     sns = tp/(tp+fn)
     return sns
+
+def make_feature_map(subject,feat_name,pq,rois,w,l,cmin,cmax):
+
+    # Import the maps from `.nrrd` files
+    r_num1 = rois[0]
+    r_num2 = rois[1]
+    pr = subject
+
+    # ROI 1
+    hr1,_ = nrrd.read('./'+feat_name+'_'+str(pr)+'_'+str(r_num1)+'.nrrd')
+    if pq == True:
+        hrq1,_ = nrrd.read('./qsm_crop_'+str(pr)+'_'+str(r_num1)+'.nrrd')
+        mr1,mrq1 = nrrd.read('./seg_crop_'+str(pr)+'_'+str(r_num1)+'.nrrd')
+        hr1 = hrq1*(abs(hr1)!=0)
+    
+    # ROI 2
+    hr2,_ = nrrd.read('./'+feat_name+'_'+str(pr)+'_'+str(r_num2)+'.nrrd')
+    if pq == True:
+        hrq2,_ = nrrd.read('./qsm_crop_'+str(pr)+'_'+str(r_num2)+'.nrrd')
+        mr2,mrq2 = nrrd.read('./seg_crop_'+str(pr)+'_'+str(r_num2)+'.nrrd')
+        hr2 = hrq2*(abs(hr2)!=0)
+
+    # Pad the ROIs to the same shape
+    px,py,pz = np.asarray(hr1.shape)-np.asarray(hr2.shape)
+    px,py,pz
+    hr1p = np.pad(hr1,((0,abs(min(0,px))),(0,abs(min(0,py))),(0,abs(min(0,pz)))))
+    hr2p = np.pad(hr2,((0,abs(max(0,px))),(0,abs(max(0,py))),(0,abs(max(0,pz)))))
+    hr = np.flipud(np.concatenate((hr1p,hr2p),axis=2))
+    pyvis(hr,10,10,'gray',w,l,cmin,cmax)
