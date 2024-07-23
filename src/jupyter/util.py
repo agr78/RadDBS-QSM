@@ -924,7 +924,7 @@ def scale_feature_matrix(X_test,idx,pre_metric_test,dose_test,age,sex,rce,eth,dd
         X = scaler.transform(X)
     return X
 
-def rad_smogn(X_t,y_t,yo1,yu,Rmo,Rmu,t,p):
+def rad_smogn(X_t,y_t,yo1,yu,Rmo,Rmu,t,p,rs):
     warnings.simplefilter(action='ignore', category=pd.errors.PerformanceWarning)
     warnings.simplefilter(action='ignore', category=RuntimeWarning)
     # Create data frame for SMOGN generation
@@ -957,7 +957,7 @@ def rad_smogn(X_t,y_t,yo1,yu,Rmo,Rmu,t,p):
     # Conduct SMOGN
     print('Prior to SMOGN sampling, mean is',X_t.mean(),'standard deviation is',X_t.std())
     X_smogn = smogn.smoter(data = D, y = str(D.columns[-1]),
-                           rel_method='manual',rel_ctrl_pts_rg = Rm)
+                           rel_method='manual',rel_ctrl_pts_rg = Rm, seed = rs)
     #print('After SMOGN sampling, mean is',X_smogn[:,:-1].mean(),'standard deviation is',X_smogn[:,:-1].std())
     y_smogn = np.asarray(X_smogn)[:,-1]
     X_smogn = np.asarray(X_smogn)[:,:-1]

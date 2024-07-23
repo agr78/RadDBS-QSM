@@ -52,7 +52,7 @@ import pickle
 from torch import nn
 patch_sklearn()
 
-def train_estimator(subsc,X_all_c,K_all_c,per_change,pre_updrs_off,aug,reg,save,rs,verbose):
+def train_estimator(subsc,X_all_c,K_all_c,per_change,pre_updrs_off,aug,reg,save,rs0,verbose):
   results = np.zeros_like(per_change)
   K_nz = []
   for j in np.arange(len(subsc)):
@@ -72,8 +72,8 @@ def train_estimator(subsc,X_all_c,K_all_c,per_change,pre_updrs_off,aug,reg,save,
                                                     test_index,pre_updrs_off,None,None,None,None,None,None,None,None,None,False,False,False)
         cvn = 5
         cv_scores = np.zeros((cvn,1))
-        rs = 1
         rcfs = 1000
+        rs = rs0
         (mu, sigma) = stats.norm.fit(y_train)
         kappa = stats.skew(y_train)
         print('Label distribution of:',mu,sigma,kappa)
@@ -87,8 +87,19 @@ def train_estimator(subsc,X_all_c,K_all_c,per_change,pre_updrs_off,aug,reg,save,
             y_cat = y_train <= 0.3
             rs = rs+1
             print('Resampled to size',y_train.shape)
-          if aug == True:
+          if aug == 'nc':
             y_train_n = y_train+(1.96*sigma)*np.random.normal(0,1,1)
+            y_train = np.hstack((y_train,y_train_n))
+            y_cat = y_train <= 0.3
+            X0_ss0 = np.vstack((X0_ss0,X0_ss0))
+          if aug == 'wbs':
+            lm0 = slm.LassoLarsCV(max_iter=1000,cv=jj,n_jobs=-1,normalize=False,eps=0.1)
+            lm0.fit(X0_ss0,y_train)
+            eps = y_train-lm0.predict(X0_ss0)
+            eps_v = eps*np.random.normal(0,1,1)
+            while len(eps_v) < len(y_train):
+              eps_v = np.hstack((eps_v,eps*np.random.normal(0,1,1)))
+            y_train_n = y_train+eps_v
             y_train = np.hstack((y_train,y_train_n))
             y_cat = y_train <= 0.3
             X0_ss0 = np.vstack((X0_ss0,X0_ss0))
@@ -133,9 +144,9 @@ def train_estimator(subsc,X_all_c,K_all_c,per_change,pre_updrs_off,aug,reg,save,
   
           # Fit whole dataset with optimal cv
           if reg == True:
-            lm = slm.LassoLarsCV(max_iter=1000,cv=jj,n_jobs=-1,normalize=False,eps=0.1)
+            lm = slm.LassoLarsCV(max_iter=1000,cv=best_cv,n_jobs=-1,normalize=False,eps=0.1)
           else:
-            lm = slm.LogisticRegressionCV(n_jobs=-1,cv=jj,class_weight=None,penalty='l1',solver='liblinear',random_state=0)
+            lm = slm.LogisticRegressionCV(n_jobs=-1,cv=best_cv,class_weight=None,penalty='l1',solver='liblinear',random_state=0)
           sel = skf.RFECV(lm,step=rcfs,cv=best_cv)
           X0_ss = sel.fit_transform(X0_ss0,y_train)
           X_test_ss = sel.transform(X_test_ss0)
@@ -145,21 +156,22 @@ def train_estimator(subsc,X_all_c,K_all_c,per_change,pre_updrs_off,aug,reg,save,
         with warnings.catch_warnings():
           warnings.filterwarnings("ignore", category=ConvergenceWarning)
           if reg == True:
-            lm = slm.LassoLarsCV(max_iter=1000,cv=jj,n_jobs=-1,normalize=False,eps=0.1)
+            lm = slm.LassoLarsCV(max_iter=1000,cv=best_cv,n_jobs=-1,normalize=False,eps=0.1)
             est = lm.fit(X0_ss,y_train)
-            results[c] = lm.predict(X_test_ss)
+            results[j] = lm.predict(X_test_ss)
           else:
-            lm = slm.LogisticRegressionCV(n_jobs=-1,cv=jj,class_weight=None,penalty='l1',solver='liblinear',random_state=1)
+            lm = slm.LogisticRegressionCV(n_jobs=-1,cv=best_cv,class_weight=None,penalty='l1',solver='liblinear',random_state=1)
             est = lm.fit(X0_ss,y_train)
-            results[c,0] = lm.predict(X_test)
-            results[c,1] = lm.predict_proba(X_test)[0][0]
+            results[j,0] = lm.predict(X_test)
+            results[j,1] = lm.predict_proba(X_test)[0][0]
     
         if verbose == True:
-            print('Lasso predicts',str(np.round(results[c],4)),'and logistic regression predicts',results[c],
-                    'for case with',str(np.round(np.repeat(per_change,r)[c],2)),'and selected CV',best_cv,'and',sum(y_cat),'minority cases')
+            print('Estimator predicts',str(np.round(results[j],4)),
+                    'for case with',str(np.round((per_change)[j],2)),'and selected CV',best_cv,'and',sum(y_cat),'minority cases')
         K_nz.append(np.squeeze(K_ss)[abs(lm.coef_)>0])
-        c=c+1
-        if save == True:
-            np.save('results'+'_'+str(est_type)+'_'+str(aug)+'_'+str(rs)+'.npy',results)
-            np.save('features'+'_'+str(est_type)+'_'+str(aug)+'_'+str(rs)+'.npy',K_nz)
-            np.save('coefs'+'_'+str(est_type)+'_'+str(aug)+'_'+str(rs)+'.npy',lm.coef_[abs(lm.coef_)>0])
+  if save == True:
+      np.save('results'+'_'+str(est_type)+'_'+str(aug)+'_'+str(rs0)+'.npy',results)
+      np.save('features'+'_'+str(est_type)+'_'+str(aug)+'_'+str(rs0)+'.npy',K_nz)
+      np.save('coefs'+'_'+str(est_type)+'_'+str(aug)+'_'+str(rs0)+'.npy',lm.coef_[abs(lm.coef_)>0])
+
+  return results
