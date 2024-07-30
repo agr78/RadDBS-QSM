@@ -103,7 +103,11 @@ def train_estimator(subsc,X_all_c,K_all_c,per_change,pre_updrs_off,aug,reg,save,
             y_train = np.hstack((y_train,y_train_n))
             y_cat = y_train <= 0.3
             X0_ss0 = np.vstack((X0_ss0,X0_ss0))
-        
+          if aug == 'smogn':
+            X_smogn,y_smogn,idx_kept,sscaler = util.rad_smogn(X0_ss0,y_train,np.amax(y_train),np.amin(y_train),1,0,0.05,0.02,rs)
+            X0_ss0 = np.vstack((X0_ss0,X_smogn))
+            y_train = np.hstack((y_train,y_smogn))
+            
         for jj in np.arange(2,cvn):
           skf_g = sms.StratifiedKFold(n_splits=jj,shuffle=True,random_state=0)
           skf_gen = skf_g.split(X0_ss0,y_cat)
@@ -167,8 +171,15 @@ def train_estimator(subsc,X_all_c,K_all_c,per_change,pre_updrs_off,aug,reg,save,
     
         if verbose == True:
             print('Estimator predicts',str(np.round(results[j],4)),
-                    'for case with',str(np.round((per_change)[j],2)),'and selected CV',best_cv,'and',sum(y_cat),'minority cases')
-        K_nz.append(np.squeeze(K_ss)[abs(lm.coef_)>0])
+                    'for case with',str(np.round((per_change)[j],2)),'and selected CV',best_cv,'and',sum(y_cat),'minority cases',
+                    'using random state',rs0)
+            # print(abs(lm.coef_)>0)
+            # print(np.squeeze(K_ss))
+        try:
+          K_nz.append(np.squeeze(K_ss)[abs(lm.coef_)>0])
+        except:
+          K_nz.append(K_ss)
+          print('Appending ',K_ss)
   if save == True:
       np.save('results'+'_'+str(est_type)+'_'+str(aug)+'_'+str(rs0)+'.npy',results)
       np.save('features'+'_'+str(est_type)+'_'+str(aug)+'_'+str(rs0)+'.npy',K_nz)

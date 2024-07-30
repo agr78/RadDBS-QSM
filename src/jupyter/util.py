@@ -19,6 +19,7 @@ import sklearn.model_selection as sms
 import sklearn.preprocessing as skp
 from sklearn.neighbors import NearestNeighbors
 import scipy
+import scipy.stats as stats
 from scipy.stats import linregress
 import smogn
 from smogn.phi import phi
@@ -1176,11 +1177,36 @@ def nstack(a,b,gpu):
         c = a+b
     return c
 
-def confidence_interval(x,c):
-    d = (c*np.var(x))/(np.sqrt(len(x)))
-    zu = np.mean(x)+d
-    zl = np.mean(x)-d
-    return zu, zl
+def confidence_interval(res,pc):
+    lr = stats.linregress(res,pc)
+    x_mean = np.mean(res)
+    y_mean = np.mean(pc)
+    n = len(pc)
+    # Slope and intercept parameters                  
+    m = 2                           
+    dof = n-m
+    # Students statistic of interval confidence                    
+    t = stats.t.ppf(0.95,dof)      
+    residual_ut = pc-np.mean(res,axis=0)
+    std_error = (np.sum(residual_ut**2)/dof)**0.5   # Standard deviation of the error
+    x = pc
+    y = np.mean(res,axis=0)
+    # Pearson's correlation coefficient
+    numerator = np.sum((x-x_mean)*(y-y_mean))
+    denominator = (np.sum((x-x_mean)**2)*np.sum((y-y_mean)**2))**0.5
+    correlation_coef = numerator/denominator
+    r = correlation_coef
+    tr = r*np.sqrt(n-2)/(np.sqrt(1-r**2))
+
+    # to plot the adjusted model
+    x_line = np.linspace(0,1,100)
+    y_line = lr.slope*x_line+lr.intercept
+    # confidence interval
+    ci = t*std_error*(1/n+(x_line-x_mean)**2/np.sum((x-x_mean)**2))**0.5
+    # predicting interval
+    pi = t*std_error*(1+1/n+(x_line-x_mean)**2/np.sum((x-x_mean)**2))**0.5  
+
+    return ci, pi, x_line, y_line
 
 def get_layer_output(x_img,model,layer):
     modelz = create_feature_extractor(model, return_nodes=layer)
@@ -1251,3 +1277,18 @@ def make_feature_map(subject,feat_name,pq,rois,w,l,cmin,cmax):
     hr2p = np.pad(hr2,((0,abs(max(0,px))),(0,abs(max(0,py))),(0,abs(max(0,pz)))))
     hr = np.flipud(np.concatenate((hr1p,hr2p),axis=2))
     pyvis(hr,10,10,'gray',w,l,cmin,cmax)
+
+def rec(res,pc):
+    epsilon = np.sort(abs(res-pc))
+    epsilon_prev = 0
+    x = []
+    y = []
+    c = 0
+    m = len(epsilon)
+    for j in np.arange(m):
+        if epsilon[j] > epsilon_prev:
+            x.append(epsilon_prev)
+            y.append(c/m)
+        c = c+1
+    acc = c/m
+    return x,y,acc
