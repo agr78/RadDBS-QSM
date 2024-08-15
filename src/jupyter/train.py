@@ -52,7 +52,7 @@ import pickle
 from torch import nn
 patch_sklearn()
 
-def train_estimator(subsc,X_all_c,K_all_c,per_change,pre_updrs_off,aug,reg,save,rs0,verbose):
+def train_estimator(subsc,X_all_c,K_all_c,per_change,pre_updrs_off,age,sex,dd,ledd,aug,reg,save,rs0,verbose):
   results = np.zeros_like(per_change)
   K_nz = []
   for j in np.arange(len(subsc)):
@@ -69,7 +69,7 @@ def train_estimator(subsc,X_all_c,K_all_c,per_change,pre_updrs_off,aug,reg,save,
                                               
         X0_ss0,_,X_test_ss0 = util.model_scale(skp.StandardScaler(),
                                                     X_train,train_index,X_test,
-                                                    test_index,pre_updrs_off,None,None,None,None,None,None,None,None,None,False,False,False)
+                                                    test_index,pre_updrs_off,age,sex,dd,ledd,None,None,None,None,None,False,False,False)
         if aug == 'smogn':
             X_smogn,y_smogn,idx_kept,sscaler = util.rad_smogn(X0_ss0,y_train,np.amax(y_train),np.amin(y_train),1,0,0.05,0.02,rs0)
             X0_ss0 = np.vstack((X0_ss0,X_smogn))
@@ -184,8 +184,8 @@ def train_estimator(subsc,X_all_c,K_all_c,per_change,pre_updrs_off,aug,reg,save,
           K_nz.append(K_ss)
           print('Appending ',K_ss)
   if save == True:
-      np.save('results'+'_'+str(est_type)+'_'+str(aug)+'_'+str(rs0)+'.npy',results)
-      np.save('features'+'_'+str(est_type)+'_'+str(aug)+'_'+str(rs0)+'.npy',K_nz)
-      np.save('coefs'+'_'+str(est_type)+'_'+str(aug)+'_'+str(rs0)+'.npy',lm.coef_[abs(lm.coef_)>0])
+      np.save('results'+'_'+str(est_type)+'_'+str(aug)+'_'+str(rs0)+'_cvs_puo.npy',results)
+      np.save('features'+'_'+str(est_type)+'_'+str(aug)+'_'+str(rs0)+'_cvs_puo.npy',K_nz)
+      np.save('coefs'+'_'+str(est_type)+'_'+str(aug)+'_'+str(rs0)+'_cvs_puo.npy',lm.coef_[abs(lm.coef_)>0])
 
   return results
