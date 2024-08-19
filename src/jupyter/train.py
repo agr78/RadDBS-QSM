@@ -71,13 +71,13 @@ def train_estimator(subsc,X_all_c,K_all_c,per_change,pre_updrs_off,age,sex,dd,le
                                                     X_train,train_index,X_test,
                                                     test_index,pre_updrs_off,age,sex,dd,ledd,None,None,None,None,None,False,False,False)
         if aug == 'smogn':
-            X_smogn,y_smogn,idx_kept,sscaler = util.rad_smogn(X0_ss0,y_train,np.amax(y_train),np.amin(y_train),1,0,0.05,0.02,rs0)
+            X_smogn,y_smogn,idx_kept,sscaler = util.rad_smogn(X0_ss0,y_train,np.amin(y_train),np.amax(y_train),1,0,0.05,0.02,rs0)
             X0_ss0 = np.vstack((X0_ss0,X_smogn))
             y_train = np.hstack((y_train,y_smogn))
             y_cat = y_train <= 0.3
 
         cvn = 5
-        cv_scores = np.zeros((cvn,1))
+        cv_scores = np.zeros((cvn+1,1))
         rcfs = 1000
         rs = rs0
         (mu, sigma) = stats.norm.fit(y_train)
@@ -111,7 +111,7 @@ def train_estimator(subsc,X_all_c,K_all_c,per_change,pre_updrs_off,age,sex,dd,le
             X0_ss0 = np.vstack((X0_ss0,X0_ss0))
    
             
-        for jj in np.arange(2,cvn):
+        for jj in np.arange(2,cvn+1):
           skf_g = sms.StratifiedKFold(n_splits=jj,shuffle=True,random_state=0)
           skf_gen = skf_g.split(X0_ss0,y_cat)
           if reg == True:
