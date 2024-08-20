@@ -1177,7 +1177,7 @@ def nstack(a,b,gpu):
         c = a+b
     return c
 
-def confidence_interval(res,pc):
+def confidence_interval(res,pc,xylim):
     lr = stats.linregress(res,pc)
     x_mean = np.mean(res)
     y_mean = np.mean(pc)
@@ -1199,7 +1199,7 @@ def confidence_interval(res,pc):
     tr = r*np.sqrt(n-2)/(np.sqrt(1-r**2))
 
     # to plot the adjusted model
-    x_line = np.linspace(0,1,100)
+    x_line = np.linspace(0,xylim,100)
     y_line = lr.slope*x_line+lr.intercept
     # confidence interval
     ci = t*std_error*(1/n+(x_line-x_mean)**2/np.sum((x-x_mean)**2))**0.5
@@ -1292,3 +1292,10 @@ def rec(res,pc):
         c = c+1
     acc = c/m
     return x,y,acc
+
+def latex_sci(number, sig_fig=2):
+    ret_string = "{0:.{1:d}e}".format(number, sig_fig)
+    a, b = ret_string.split("e")
+    # remove leading "+" and strip leading zeros
+    b = int(b)
+    return a + 'x10^{' + str(b)+'}'
