@@ -35,6 +35,7 @@ import matplotlib.pyplot as plt
 from pylab import rcParams
 import pandas as pd
 import warnings
+from sklearnex import patch_sklearn, config_context
 from sklearn.cluster import DBSCAN
 from sklearn.exceptions import ConvergenceWarning
 from sklearn import preprocessing as skp
@@ -48,6 +49,7 @@ import util as util
 import nibabel as nib
 import os
 import pickle
+patch_sklearn()
 
 def train_estimator(subsc,X_all_c,K_all_c,per_change,pre_updrs_off,age,sex,dd,ledd,aug,reg,save,rs0,verbose):
   results = np.zeros_like(per_change)
@@ -58,57 +60,89 @@ def train_estimator(subsc,X_all_c,K_all_c,per_change,pre_updrs_off,age,sex,dd,le
         train_index = subsc != test_id
         X_train = X_all_c[train_index,:,:]
         X_test = X_all_c[test_index,:,:]
-        y_train = per_change[train_index]
-
-        y_cat = y_train <= 0.3
-        idy = np.where(y_cat==1)
-        # Cross validation
-                                              
-        X0_ss0,_,X_test_ss0 = util.model_scale(skp.StandardScaler(),
-                                                    X_train,train_index,X_test,
-                                                    test_index,pre_updrs_off,age,sex,dd,ledd,None,None,None,None,None,False,False,False)
+        if aug == 'nc_iid':
+          y_train0 = per_change[train_index]
+          y_cat = y_train0 <= 0.3
+          idy = np.where(y_cat==1)
+          # Cross validation                 
+          X0_ss00,_,X_test_ss0 = util.model_scale(skp.StandardScaler(),
+                                                      X_train,train_index,X_test,
+                                                      test_index,pre_updrs_off,age,sex,dd,ledd,None,None,None,None,None,False,False,False)
+          (mu, sigma) = stats.norm.fit(y_train0)
+          kappa = stats.skew(y_train0)
+        else:
+          y_train = per_change[train_index]
+          y_cat = y_train <= 0.3
+          idy = np.where(y_cat==1)
+          # Cross validation                                
+          X0_ss0,_,X_test_ss0 = util.model_scale(skp.StandardScaler(),
+                                                      X_train,train_index,X_test,
+                                                      test_index,pre_updrs_off,age,sex,dd,ledd,None,None,None,None,None,False,False,False)
+          (mu, sigma) = stats.norm.fit(y_train)
+          kappa = stats.skew(y_train)
         if aug == 'smogn':
-            X_smogn,y_smogn,idx_kept,sscaler = util.rad_smogn(X0_ss0,y_train,np.amax(y_train),np.amin(y_train),1,0,0.05,0.02,rs0)
+            X_smogn,y_smogn,idx_kept,sscaler = util.rad_smogn(X0_ss0,y_train,np.amin(y_train),np.amax(y_train),1,0,0.05,0.02,rs0)
             X0_ss0 = np.vstack((X0_ss0,X_smogn))
             y_train = np.hstack((y_train,y_smogn))
             y_cat = y_train <= 0.3
 
         cvn = 5
-        cv_scores = np.zeros((cvn,1))
+        cv_scores = np.zeros((cvn+1,1))
         rcfs = 1000
         rs = rs0
-        (mu, sigma) = stats.norm.fit(y_train)
-        kappa = stats.skew(y_train)
+      
         print('Label distribution of:',mu,sigma,kappa)
+        
         for jj in np.arange(2,cvn):
           # Resample to avoid stratification errors
-          while np.sum(y_cat) < cvn:
-            np.random.seed(rs)
-            idyr = np.random.choice(np.asarray(idy).ravel())
-            X0_ss0 = np.append(X0_ss0,X0_ss0[idyr,:].reshape(1,-1),axis=0)
-            y_train = np.append(y_train,y_train[idyr])
-            y_cat = y_train <= 0.3
-            rs = rs+1
-            print('Resampled to size',y_train.shape)
-          if aug == 'nc':
-            y_train_n = y_train+(1.96*sigma)*np.random.normal(0,1,1)
-            y_train = np.hstack((y_train,y_train_n))
-            y_cat = y_train <= 0.3
-            X0_ss0 = np.vstack((X0_ss0,X0_ss0))
-          if aug == 'wbs':
-            lm0 = slm.LassoLarsCV(max_iter=1000,cv=jj,n_jobs=-1,normalize=False,eps=0.1)
-            lm0.fit(X0_ss0,y_train)
-            eps = y_train-lm0.predict(X0_ss0)
-            eps_v = eps*np.random.normal(0,1,1)
-            while len(eps_v) < len(y_train):
-              eps_v = np.hstack((eps_v,eps*np.random.normal(0,1,1)))
-            y_train_n = y_train+eps_v
-            y_train = np.hstack((y_train,y_train_n))
-            y_cat = y_train <= 0.3
-            X0_ss0 = np.vstack((X0_ss0,X0_ss0))
-   
+          if aug == 'nc_iid':
+            while np.sum(y_cat) < cvn:
+              np.random.seed(rs)
+              idyr = np.random.choice(np.asarray(idy).ravel())
+              X0_ss00 = np.append(X0_ss00,X0_ss00[idyr,:].reshape(1,-1),axis=0)
+              y_train0 = np.append(y_train0,y_train0[idyr])
+              y_cat = y_train0 <= 0.3
+              rs = rs+1
+              print('Resampled to size',y_train0.shape)
+              y_train_n = y_train0
+              X0_ss0_n = X0_ss00
+              print('Size before appending',y_train_n.shape)
+              y_train_n = np.append(y_train_n,y_train0+(2.326*sigma)*np.random.normal(0,1,1))
+              print('Size after appending',y_train_n.shape)
+              y_cat = y_train_n <= 0.3
+              X0_ss0_n = np.append(X0_ss0_n,X0_ss00,axis=0)
+              y_train = y_train_n
+              X0_ss0 = X0_ss0_n
+          else:
+            while np.sum(y_cat) < cvn:
+              np.random.seed(rs)
+              idyr = np.random.choice(np.asarray(idy).ravel())
+              X0_ss0 = np.append(X0_ss0,X0_ss0[idyr,:].reshape(1,-1),axis=0)
+              y_train = np.append(y_train,y_train[idyr])
+              y_cat = y_train <= 0.3
+              rs = rs+1
+              print('Resampled to size',y_train.shape)
+            if aug == 'nc':
+              y_train_n = y_train+(1.96*sigma)*np.random.normal(0,1,1)
+              y_train = np.hstack((y_train,y_train_n))
+              y_cat = y_train <= 0.3
+              X0_ss0 = np.vstack((X0_ss0,X0_ss0))
+    
+
+            if aug == 'wbs':
+              lm0 = slm.LassoLarsCV(max_iter=1000,cv=jj,n_jobs=-1,normalize=False,eps=0.1)
+              lm0.fit(X0_ss0,y_train)
+              eps = y_train-lm0.predict(X0_ss0)
+              eps_v = eps*np.random.normal(0,1,1)
+              while len(eps_v) < len(y_train):
+                eps_v = np.hstack((eps_v,eps*np.random.normal(0,1,1)))
+              y_train_n = y_train+eps_v
+              y_train = np.hstack((y_train,y_train_n))
+              y_cat = y_train <= 0.3
+              X0_ss0 = np.vstack((X0_ss0,X0_ss0))
+    
             
-        for jj in np.arange(2,cvn):
+        for jj in np.arange(2,cvn+1):
           skf_g = sms.StratifiedKFold(n_splits=jj,shuffle=True,random_state=0)
           skf_gen = skf_g.split(X0_ss0,y_cat)
           if reg == True:
