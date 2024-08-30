@@ -71,6 +71,16 @@ def train_estimator(subsc,X_all_c,K_all_c,per_change,pre_updrs_off,age,sex,dd,le
                                                       test_index,pre_updrs_off,age,sex,dd,ledd,None,None,None,None,None,False,False,False)
           (mu, sigma) = stats.norm.fit(y_train0)
           kappa = stats.skew(y_train0)
+        if aug == 'nc_iid_q':
+          y_train0 = per_change[train_index]
+          y_cat = y_train0 <= 0.3
+          idy = np.where(y_cat==1)
+          # Cross validation                 
+          X0_ss00,_,X_test_ss0 = util.model_scale(skp.StandardScaler(),
+                                                      X_train,train_index,X_test,
+                                                      test_index,pre_updrs_off,age,sex,dd,ledd,None,None,None,None,None,False,False,False)
+          (mu, sigma) = stats.norm.fit(y_train0)
+          kappa = stats.skew(y_train0)
         else:
           y_train = per_change[train_index]
           y_cat = y_train <= 0.3
@@ -114,6 +124,23 @@ def train_estimator(subsc,X_all_c,K_all_c,per_change,pre_updrs_off,age,sex,dd,le
               X0_ss0_n = np.append(X0_ss0_n,X0_ss00,axis=0)
               y_train = y_train_n
               X0_ss0 = X0_ss0_n
+          if aug == 'nc_iid_q':
+            Q = 10
+            for jj in np.arange(Q):
+              # Resample to avoid stratification errors
+              while np.sum(y_cat) < cvn:
+                np.random.seed(rs)
+                idyr = np.random.choice(np.asarray(idy).ravel())
+                X0_ss00 = np.append(X0_ss00,X0_ss00[idyr,:].reshape(1,-1),axis=0)
+                y_train0 = np.append(y_train0,y_train0[idyr])
+                y_cat = y_train0 <= 0.3
+                rs = rs+1
+                print('Resampled to size',y_train0.shape)
+                y_train_n = y_train0
+                X0_ss0_n = X0_ss00
+            y_train = y_train_n
+            X0_ss0 = X0_ss0_n
+      
           else:
             while np.sum(y_cat) < cvn:
               np.random.seed(rs)
