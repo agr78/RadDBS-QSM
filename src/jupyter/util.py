@@ -1296,3 +1296,17 @@ def rec(res,pc):
         auc_rec = scipy.integrate.simps(y,x)/epsilon_max
         return x, np.array(y), auc_rec
 
+def gmm(D):
+    N = 0
+    M = 0
+    U = 0
+    # Find total dataset size for different size components of mixture
+    for d in np.arange(len(D)):
+        N = N+len(D[d][0])
+    # Compute mean and variance using weighted Gaussian mixture model
+    for d in np.arange(len(D)):
+        n = len(D[d][0])
+        M = M + (n/N)*np.mean(D[d][0])
+        U = U + (n/N)*(np.mean(D[d][0])**2+np.var(D[d][0]))
+    V = U-(M**2)
+    return M,V
