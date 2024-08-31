@@ -29,8 +29,8 @@ import sys
 import collections
 import math
 import nibabel as nib
-#import torch
-#from torch import nn
+# import torch
+# from torch import nn
 from PIL import Image
 import re
 import nrrd
@@ -1177,7 +1177,7 @@ def nstack(a,b,gpu):
         c = a+b
     return c
 
-def confidence_interval(res,pc,xmax):
+def confidence_interval(res,pc,xylim):
     lr = stats.linregress(res,pc)
     x_mean = np.mean(res)
     y_mean = np.mean(pc)
@@ -1199,7 +1199,7 @@ def confidence_interval(res,pc,xmax):
     tr = r*np.sqrt(n-2)/(np.sqrt(1-r**2))
 
     # to plot the adjusted model
-    x_line = np.linspace(0,xmax,100)
+    x_line = np.linspace(0,xylim,100)
     y_line = lr.slope*x_line+lr.intercept
     # confidence interval
     ci = t*std_error*(1/n+(x_line-x_mean)**2/np.sum((x-x_mean)**2))**0.5
@@ -1279,34 +1279,23 @@ def make_feature_map(subject,feat_name,pq,rois,w,l,cmin,cmax):
     pyvis(hr,10,10,'gray',w,l,cmin,cmax)
 
 def rec(res,pc):
-        y_true = pc
-        y_pred = res
-        epsilon_0 = 0.0
-        epsilon_max = 1.0
-        d_epsilon = 0.01
-        y = []
-        x = np.arange(epsilon_0,epsilon_max,d_epsilon)
-        epsilon = np.abs(y_true-y_pred) 
-        for j in np.arange(len(x)):
-            c = 0
-            for k in np.arange(len(epsilon)):
-                if epsilon[k] < x[j]:
-                    c = c+1
-            y.append(c/len(y_true))
-        auc_rec = scipy.integrate.simps(y,x)/epsilon_max
-        return x, np.array(y), auc_rec
+    epsilon = np.sort(abs(res-pc))
+    epsilon_prev = 0
+    x = []
+    y = []
+    c = 0
+    m = len(epsilon)
+    for j in np.arange(m):
+        if epsilon[j] > epsilon_prev:
+            x.append(epsilon_prev)
+            y.append(c/m)
+        c = c+1
+    acc = c/m
+    return x,y,acc
 
-def gmm(D):
-    N = 0
-    M = 0
-    U = 0
-    # Find total dataset size for different size components of mixture
-    for d in np.arange(len(D)):
-        N = N+len(D[d][0])
-    # Compute mean and variance using weighted Gaussian mixture model
-    for d in np.arange(len(D)):
-        n = len(D[d][0])
-        M = M + (n/N)*np.mean(D[d][0])
-        U = U + (n/N)*(np.mean(D[d][0])**2+np.var(D[d][0]))
-    V = U-(M**2)
-    return M,V
+def latex_sci(number, sig_fig=2):
+    ret_string = "{0:.{1:d}e}".format(number, sig_fig)
+    a, b = ret_string.split("e")
+    # remove leading "+" and strip leading zeros
+    b = int(b)
+    return a + 'x10^{' + str(b)+'}'
