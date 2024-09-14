@@ -102,29 +102,8 @@ def train_estimator(subsc,X_all_c,K_all_c,per_change,pre_updrs_off,age,sex,dd,le
         rcfs = 1000
         rs = rs0
       
-        print('Label distribution of:',mu,sigma,kappa)
-        
-        for jj in np.arange(2,cvn):
-          # Resample to avoid stratification errors
-          if aug == 'nc_iid':
-            while np.sum(y_cat) < cvn:
-              np.random.seed(rs)
-              idyr = np.random.choice(np.asarray(idy).ravel())
-              X0_ss00 = np.append(X0_ss00,X0_ss00[idyr,:].reshape(1,-1),axis=0)
-              y_train0 = np.append(y_train0,y_train0[idyr])
-              y_cat = y_train0 <= 0.3
-              rs = rs+1
-              print('Resampled to size',y_train0.shape)
-              y_train_n = y_train0
-              X0_ss0_n = X0_ss00
-              print('Size before appending',y_train_n.shape)
-              y_train_n = np.append(y_train_n,y_train0+(2.326*sigma)*np.random.normal(0,1,1))
-              print('Size after appending',y_train_n.shape)
-              y_cat = y_train_n <= 0.3
-              X0_ss0_n = np.append(X0_ss0_n,X0_ss00,axis=0)
-              y_train = y_train_n
-              X0_ss0 = X0_ss0_n
-          if aug == 'nc_iid_q':
+        #print('Label distribution of:',mu,sigma,kappa)
+        if aug == 'nc_iid_q':
             Q = 10
             for jj in np.arange(Q):
               # Resample to avoid stratification errors
@@ -135,22 +114,45 @@ def train_estimator(subsc,X_all_c,K_all_c,per_change,pre_updrs_off,age,sex,dd,le
                 y_train0 = np.append(y_train0,y_train0[idyr])
                 y_cat = y_train0 <= 0.3
                 rs = rs+1
-                print('Resampled to size',y_train0.shape)
+                #print('Resampled to size',y_train0.shape)
                 y_train_n = y_train0
                 X0_ss0_n = X0_ss00
+              y_train_n = np.append(y_train_n,y_train0+(1.96*sigma)*np.random.normal(0,1,1))
+              y_cat = y_train_n <= 0.3
+              X0_ss0_n = np.append(X0_ss0_n,X0_ss00,axis=0)
+
             y_train = y_train_n
             X0_ss0 = X0_ss0_n
-      
-          else:
+        for jj in np.arange(2,cvn):
+          # Resample to avoid stratification errors
+          if aug == 'nc_iid':
             while np.sum(y_cat) < cvn:
               np.random.seed(rs)
               idyr = np.random.choice(np.asarray(idy).ravel())
-              X0_ss0 = np.append(X0_ss0,X0_ss0[idyr,:].reshape(1,-1),axis=0)
-              y_train = np.append(y_train,y_train[idyr])
-              y_cat = y_train <= 0.3
+              X0_ss00 = np.append(X0_ss00,X0_ss00[idyr,:].reshape(1,-1),axis=0)
+              y_train0 = np.append(y_train0,y_train0[idyr])
+              y_cat = y_train0 <= 0.3
               rs = rs+1
-              print('Resampled to size',y_train.shape)
+              #print('Resampled to size',y_train0.shape)
+              y_train_n = y_train0
+              X0_ss0_n = X0_ss00
+              y_train_n = np.append(y_train_n,y_train0+(2.326*sigma)*np.random.normal(0,1,1))
+              y_cat = y_train_n <= 0.3
+              X0_ss0_n = np.append(X0_ss0_n,X0_ss00,axis=0)
+              y_train = y_train_n
+              X0_ss0 = X0_ss0_n
+          
+    
             if aug == 'nc':
+              # else:
+              while np.sum(y_cat) < cvn:
+                np.random.seed(rs)
+                idyr = np.random.choice(np.asarray(idy).ravel())
+                X0_ss0 = np.append(X0_ss0,X0_ss0[idyr,:].reshape(1,-1),axis=0)
+                y_train = np.append(y_train,y_train[idyr])
+                y_cat = y_train <= 0.3
+                rs = rs+1
+                #print('Resampled to size',y_train.shape)
               y_train_n = y_train+(1.96*sigma)*np.random.normal(0,1,1)
               y_train = np.hstack((y_train,y_train_n))
               y_cat = y_train <= 0.3
@@ -158,16 +160,45 @@ def train_estimator(subsc,X_all_c,K_all_c,per_change,pre_updrs_off,age,sex,dd,le
     
 
             if aug == 'wbs':
-              lm0 = slm.LassoLarsCV(max_iter=1000,cv=jj,n_jobs=-1,normalize=False,eps=0.1)
-              lm0.fit(X0_ss0,y_train)
-              eps = y_train-lm0.predict(X0_ss0)
-              eps_v = eps*np.random.normal(0,1,1)
-              while len(eps_v) < len(y_train):
-                eps_v = np.hstack((eps_v,eps*np.random.normal(0,1,1)))
-              y_train_n = y_train+eps_v
-              y_train = np.hstack((y_train,y_train_n))
-              y_cat = y_train <= 0.3
-              X0_ss0 = np.vstack((X0_ss0,X0_ss0))
+              Q = 10
+              X0_ss00 = X0_ss0
+              y_train0 = y_train
+              print(y_train0.shape)
+              cvn = 5
+
+              cv_scores = np.zeros((cvn+1,1))
+              rs = 1
+              rcfs = 1000
+              (mu, sigma) = stats.norm.fit(y_train)
+              kappa = stats.skew(y_train)
+              #print('Label distribution of:',mu,sigma,kappa)
+              # for jj in np.arange(2,cvn+1):
+              #   # Resample to avoid stratification errors
+              #   while np.sum(y_cat) < cvn:
+              #     np.random.seed(rs)
+              #     idyr = np.random.choice(np.asarray(idy).ravel())
+              #     X0_ss0 = np.append(X0_ss0,X0_ss0[idyr,:].reshape(1,-1),axis=0)
+              #     y_train = np.append(y_train,y_train[idyr])
+              #     y_cat = y_train <= 0.3
+              #     rs = rs+1
+              #     print('Resampled to size',y_train.shape,X0_ss0.shape)
+              #     eps_v = eps*np.random.normal(0,1,1)
+              #     y_train0 = y_train
+              #     y_train_n = y_train0
+              #     X0_ss0_n = X0_ss0
+
+              # Control for different training sample sizes
+              for jjj in np.arange(Q):
+                ls0 = slm.LassoLarsCV(max_iter=1000,cv=jj,n_jobs=-1,normalize=False,eps=0.1)
+                est0 = ls0.fit(X0_ss0,y_train)
+                eps = y_train-ls0.predict(X0_ss0)
+                eps_v = eps*np.random.normal(0,1,1)
+                y_train_n = np.append(y_train_n,y_train0+eps_v)
+                y_cat = y_train_n <= 0.3
+                X0_ss0_n = np.append(X0_ss0_n,X0_ss0,axis=0)
+              y_train = y_train_n
+              X0_ss0 = X0_ss0_n
+
     
             
         for jj in np.arange(2,cvn+1):
@@ -183,11 +214,14 @@ def train_estimator(subsc,X_all_c,K_all_c,per_change,pre_updrs_off,age,sex,dd,le
           with warnings.catch_warnings() and np.errstate(divide='ignore', invalid='ignore'):
             # Feature selection
             warnings.filterwarnings("ignore", category=ConvergenceWarning)
-            sel = skf.RFECV(lm,step=rcfs,cv=skf_gen,n_jobs=1)
-            X0_ss = sel.fit_transform(X0_ss0,y_train)
-            est = lm.fit(X0_ss,y_train)
+            try:
+              sel = skf.RFECV(lm,step=rcfs,cv=skf_gen,n_jobs=-1)
+              X0_ss = sel.fit_transform(X0_ss0,y_train)
+              est = lm.fit(X0_ss,y_train)
+            except:
+              print('Skipping split',jj,'feature elimination failed')
             cv_scores[jj] = est.score(X0_ss,y_train)
-            print('LassoCV score for',jj,'is',cv_scores[jj],'from dataset of size',X0_ss.shape)
+            #print('LassoCV score for',jj,'is',cv_scores[jj],'from dataset of size',X0_ss.shape)
             
         with warnings.catch_warnings() and np.errstate(divide='ignore', invalid='ignore'):        
           best_cv = np.argmax(cv_scores)
@@ -213,7 +247,7 @@ def train_estimator(subsc,X_all_c,K_all_c,per_change,pre_updrs_off,age,sex,dd,le
             lm = slm.LassoLarsCV(max_iter=1000,cv=best_cv,n_jobs=-1,normalize=False,eps=0.1)
           else:
             lm = slm.LogisticRegressionCV(n_jobs=-1,cv=best_cv,class_weight=None,penalty='l1',solver='liblinear',random_state=0)
-          sel = skf.RFECV(lm,step=rcfs,cv=best_cv)
+          sel = skf.RFECV(lm,step=rcfs,cv=best_cv,n_jobs=-1)
           X0_ss = sel.fit_transform(X0_ss0,y_train)
           X_test_ss = sel.transform(X_test_ss0)
           K_ss = sel.transform(K_all_c.reshape(1,-1))
@@ -234,9 +268,7 @@ def train_estimator(subsc,X_all_c,K_all_c,per_change,pre_updrs_off,age,sex,dd,le
         if verbose == True:
             print('Estimator predicts',str(np.round(results[j],4)),
                     'for case with',str(np.round((per_change)[j],2)),'and selected CV',best_cv,'and',sum(y_cat),'minority cases',
-                    'using random state',rs0)
-            # print(abs(lm.coef_)>0)
-            # print(np.squeeze(K_ss))
+                    'using random state',rs0,'and sample size',X0_ss.shape)
         try:
           K_nz.append(np.squeeze(K_ss)[abs(lm.coef_)>0])
         except:
