@@ -1263,15 +1263,15 @@ def make_feature_map(subject,feat_name,mask,rois,w,l,cmin,cmax,normalize):
     # ROI 1
     hr1,_ = nrrd.read('./'+feat_name+'_'+str(pr)+'_'+str(r_num1)+'.nrrd')
     if np.sum(mask) > 0:
-        hrq1,_ = nrrd.read('./maps/qsm_crop_'+str(pr)+'_'+str(r_num1)+'.nrrd')
-        mr1,mrq1 = nrrd.read('./maps/seg_crop_'+str(pr)+'_'+str(r_num1)+'.nrrd')
+        hrq1,_ = nrrd.read('./maps/msw_qsm_crop_'+str(pr)+'_'+str(r_num1)+'.nrrd')
+        mr1,mrq1 = nrrd.read('./maps/msw_seg_crop_'+str(pr)+'_'+str(r_num1)+'.nrrd')
         hr1 = hrq1*(abs(hr1)!=0)
     
     # ROI 2
     hr2,_ = nrrd.read('./'+feat_name+'_'+str(pr)+'_'+str(r_num2)+'.nrrd')
     if np.sum(mask) > 0:
-        hrq2,_ = nrrd.read('./maps/qsm_crop_'+str(pr)+'_'+str(r_num2)+'.nrrd')
-        mr2,mrq2 = nrrd.read('./maps/seg_crop_'+str(pr)+'_'+str(r_num2)+'.nrrd')
+        hrq2,_ = nrrd.read('./maps/msw_qsm_crop_'+str(pr)+'_'+str(r_num2)+'.nrrd')
+        mr2,mrq2 = nrrd.read('./maps/msw_seg_crop_'+str(pr)+'_'+str(r_num2)+'.nrrd')
         hr2 = hrq2*(abs(hr2)!=0)
 
     # Pad the ROIs to the same shape
@@ -1312,3 +1312,24 @@ def feature_map_mask(subject,feat_name,pq,rois):
     hr = np.flipud(np.concatenate((hr1p,hr2p),axis=2))
     mask = abs(hr) != 0
     return mask
+
+def nominal_encode(X,category,categories,verbose):
+    # Create nominal rater encoding and append it
+    N = len(np.unique(categories))
+    x = np.zeros((X.shape[0],N))
+    X_cat = np.zeros((X.shape[0],X.shape[1]+N))
+    if verbose == 1:
+        print('Initializing zero array of shape:',x.shape)
+        print('Will append to feature matrix of shape:',X.shape)
+        print('Encoding nominal features of shape:',category.shape)
+        print('With number of unique values:',N)
+        print('Creating new feature matrix of shape:',X_cat.shape)
+    X_cat[:,0:X.shape[1]] = X
+    for jj in np.arange(X.shape[0]):
+        phys_idx = int(category[jj])
+        x[jj,phys_idx] = 1
+    
+    X_cat[:,-N:] = x
+    if verbose == 1:
+        print('Appending',x,'for category',category,'in categories',np.unique(categories))
+    return X_cat
