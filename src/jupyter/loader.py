@@ -23,6 +23,7 @@ def data_loader(q_directory,s_directory,reload,suffix,qsm_prefix):
     if reload == 1:
         for seg_filename in s_directory:
             id = seg_filename[12:14]
+            print(id)
             if os.path.isfile(s_dir+seg_filename) and os.path.isfile(q_dir+qsm_prefix+str(id)+'.nii.gz'):
                 seg = nib.load(s_dir+seg_filename)
                 voxel_size = seg.header['pixdim'][0:3]

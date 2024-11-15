@@ -51,7 +51,7 @@ import os
 import pickle
 patch_sklearn()
 
-def train_estimator(subsc,X_all_c,K_all_c,per_change,pre_updrs_off,age,sex,dd,ledd,aug,reg,save,rs0,verbose):
+def train_estimator(subsc,X_all_c,K_all_c,per_change,pre_updrs_off,age,sex,dd,ledd,aug,reg,save,rs0,u_state,verbose):
   results = np.zeros_like(per_change)
   K_nz = []
   for j in np.arange(len(subsc)):
@@ -270,8 +270,8 @@ def train_estimator(subsc,X_all_c,K_all_c,per_change,pre_updrs_off,age,sex,dd,le
           K_nz.append(K_ss)
           print('Appending ',K_ss)
   if save == True:
-      np.save('results'+'_'+str(est_type)+'_'+str(aug)+'_'+str(rs0)+'_cvs_puo.npy',results)
-      np.save('features'+'_'+str(est_type)+'_'+str(aug)+'_'+str(rs0)+'_cvs_puo.npy',K_nz)
-      np.save('coefs'+'_'+str(est_type)+'_'+str(aug)+'_'+str(rs0)+'_cvs_puo.npy',lm.coef_[abs(lm.coef_)>0])
+      np.save('results'+'_'+str(est_type)+'_'+str(aug)+'_'+str(rs0)+'_'+str(u_state)+'_cvs_puo.npy',results)
+      np.save('features'+'_'+str(est_type)+'_'+str(aug)+'_'+str(rs0)+'_'+str(u_state)+'_cvs_puo.npy',K_nz)
+      np.save('coefs'+'_'+str(est_type)+'_'+str(aug)+'_'+str(rs0)+'_'+str(u_state)+'_cvs_puo.npy',lm.coef_[abs(lm.coef_)>0])
 
   return results

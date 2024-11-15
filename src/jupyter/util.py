@@ -19,8 +19,8 @@ import sklearn.model_selection as sms
 import sklearn.preprocessing as skp
 from sklearn.neighbors import NearestNeighbors
 import scipy
-import scipy.stats as stats
 from scipy.stats import linregress
+import scipy.stats as stats
 import smogn
 from smogn.phi import phi
 from smogn.phi_ctrl_pts import phi_ctrl_pts
@@ -29,11 +29,10 @@ import sys
 import collections
 import math
 import nibabel as nib
-# import torch
-# from torch import nn
 from PIL import Image
 import re
 import nrrd
+from itertools import chain
 try:
     from torchvision.models.feature_extraction import create_feature_extractor
 except:
@@ -82,9 +81,12 @@ def pyvis(volume,figx,figy,colormap,w,l,cmin,cmax):
     fig, ax = plt.subplots()
     ax.volume = volume
     ax.index = volume.shape[0]//2
-    volume[volume<-((w-l)//2)] = -(w-l)//2
-    volume[volume>((w-l)//2)] = (w-l)//2
-    im = ax.imshow(volume[ax.index],cmap=colormap,vmin=cmin, vmax=cmax)
+    if w == 0 and l == 0:
+        im = ax.imshow(volume[ax.index],cmap=colormap)
+    else:
+        volume[volume<-((w-l)//2)] = -(w-l)//2
+        volume[volume>((w-l)//2)] = (w-l)//2
+        im = ax.imshow(volume[ax.index],cmap=colormap,vmin=cmin, vmax=cmax)
    
     divider = make_axes_locatable(ax)
     cax = divider.append_axes("right", size="5%", pad=0.05)
@@ -924,6 +926,7 @@ def scale_feature_matrix(X_test,idx,pre_metric_test,dose_test,age,sex,rce,eth,dd
             X = np.append(X,tms[idx].reshape(1,-1),1)
         X = scaler.transform(X)
     return X
+
 def rad_smogn(X_t,y_t,yo1,yu,Rmo,Rmu,t,p,rs):
     warnings.simplefilter(action='ignore', category=pd.errors.PerformanceWarning)
     warnings.simplefilter(action='ignore', category=RuntimeWarning)
@@ -1177,7 +1180,7 @@ def nstack(a,b,gpu):
         c = a+b
     return c
 
-def confidence_interval(res,pc,xylim):
+def confidence_interval(res,pc,xmax):
     lr = stats.linregress(res,pc)
     x_mean = np.mean(res)
     y_mean = np.mean(pc)
@@ -1199,7 +1202,7 @@ def confidence_interval(res,pc,xylim):
     tr = r*np.sqrt(n-2)/(np.sqrt(1-r**2))
 
     # to plot the adjusted model
-    x_line = np.linspace(0,xylim,100)
+    x_line = np.linspace(0,xmax,100)
     y_line = lr.slope*x_line+lr.intercept
     # confidence interval
     ci = t*std_error*(1/n+(x_line-x_mean)**2/np.sum((x-x_mean)**2))**0.5
@@ -1249,7 +1252,7 @@ def classification_sensitivity(y_pred,y_true):
     sns = tp/(tp+fn)
     return sns
 
-def make_feature_map(subject,feat_name,pq,rois,w,l,cmin,cmax):
+def make_feature_map(subject,feat_name,mask,rois,w,l,cmin,cmax,normalize):
 
     # Import the maps from `.nrrd` files
     r_num1 = rois[0]
@@ -1258,44 +1261,203 @@ def make_feature_map(subject,feat_name,pq,rois,w,l,cmin,cmax):
 
     # ROI 1
     hr1,_ = nrrd.read('./'+feat_name+'_'+str(pr)+'_'+str(r_num1)+'.nrrd')
-    if pq == True:
-        hrq1,_ = nrrd.read('./qsm_crop_'+str(pr)+'_'+str(r_num1)+'.nrrd')
-        mr1,mrq1 = nrrd.read('./seg_crop_'+str(pr)+'_'+str(r_num1)+'.nrrd')
+    if np.sum(mask) > 0:
+        hrq1,_ = nrrd.read('./maps/msw_qsm_crop_'+str(pr)+'_'+str(r_num1)+'.nrrd')
+        mr1,mrq1 = nrrd.read('./maps/msw_seg_crop_'+str(pr)+'_'+str(r_num1)+'.nrrd')
         hr1 = hrq1*(abs(hr1)!=0)
     
     # ROI 2
     hr2,_ = nrrd.read('./'+feat_name+'_'+str(pr)+'_'+str(r_num2)+'.nrrd')
-    if pq == True:
-        hrq2,_ = nrrd.read('./qsm_crop_'+str(pr)+'_'+str(r_num2)+'.nrrd')
-        mr2,mrq2 = nrrd.read('./seg_crop_'+str(pr)+'_'+str(r_num2)+'.nrrd')
+    if np.sum(mask) > 0:
+        hrq2,_ = nrrd.read('./maps/msw_qsm_crop_'+str(pr)+'_'+str(r_num2)+'.nrrd')
+        mr2,mrq2 = nrrd.read('./maps/msw_seg_crop_'+str(pr)+'_'+str(r_num2)+'.nrrd')
         hr2 = hrq2*(abs(hr2)!=0)
 
     # Pad the ROIs to the same shape
     px,py,pz = np.asarray(hr1.shape)-np.asarray(hr2.shape)
-    px,py,pz
     hr1p = np.pad(hr1,((0,abs(min(0,px))),(0,abs(min(0,py))),(0,abs(min(0,pz)))))
     hr2p = np.pad(hr2,((0,abs(max(0,px))),(0,abs(max(0,py))),(0,abs(max(0,pz)))))
     hr = np.flipud(np.concatenate((hr1p,hr2p),axis=2))
-    pyvis(hr,10,10,'gray',w,l,cmin,cmax)
 
-def rec(res,pc):
-    epsilon = np.sort(abs(res-pc))
-    epsilon_prev = 0
-    x = []
-    y = []
+    if normalize == True:
+        hr = hr/np.amax(hr)
+    
+    if np.sum(mask) > 0:
+        pyvis(mask*hr,10,10,'gray',w,l,cmin,cmax)
+    else:
+        pyvis(hr,10,10,'gray',w,l,cmin,cmax)
+
+def nrrd_read(file):
+    hr,_ = nrrd.read(file)
+    pyvis(hr,10,10,'gray',0,0,0,0)
+
+def feature_map_mask(subject,feat_name,pq,rois):
+
+    # Import the maps from `.nrrd` files
+    r_num1 = rois[0]
+    r_num2 = rois[1]
+    pr = subject
+
+    # ROI 1
+    hr1,_ = nrrd.read('./'+feat_name+'_'+str(pr)+'_'+str(r_num1)+'.nrrd')
+    
+    # ROI 2
+    hr2,_ = nrrd.read('./'+feat_name+'_'+str(pr)+'_'+str(r_num2)+'.nrrd')
+
+    # Pad the ROIs to the same shape
+    px,py,pz = np.asarray(hr1.shape)-np.asarray(hr2.shape)
+    hr1p = np.pad(hr1,((0,abs(min(0,px))),(0,abs(min(0,py))),(0,abs(min(0,pz)))))
+    hr2p = np.pad(hr2,((0,abs(max(0,px))),(0,abs(max(0,py))),(0,abs(max(0,pz)))))
+    hr = np.flipud(np.concatenate((hr1p,hr2p),axis=2))
+    mask = abs(hr) != 0
+    return mask
+
+def nominal_encode(X,category,categories,verbose):
+    # Create nominal rater encoding and append it
+    N = len(np.unique(categories))
+    x = np.zeros((X.shape[0],N))
+    X_cat = np.zeros((X.shape[0],X.shape[1]+N))
+    if verbose == 1:
+        print('Initializing zero array of shape:',x.shape)
+        print('Will append to feature matrix of shape:',X.shape)
+        print('Encoding nominal features of shape:',category.shape)
+        print('With number of unique values:',N)
+        print('Creating new feature matrix of shape:',X_cat.shape)
+    X_cat[:,0:X.shape[1]] = X
+    for jj in np.arange(X.shape[0]):
+        phys_idx = int(category[jj])
+        #try:
+        x[jj,phys_idx] = 1
+    #     except:
+    #         xd = 1
+    #         break
+    # if xd == 1:
+    #     print('Unique training categories are not continuous, expanding nominal encoding dimension by 1 and repopulating encoding')
+    #     print(category)
+    #     print(training_categories)
+    #     x = np.zeros((X.shape[0],N+1))
+    #     X_cat = np.zeros((X.shape[0],X.shape[1]+N+1))
+    #     for jj in np.arange(X.shape[0]):
+    #         phys_idx = int(category[jj])
+    #         x[jj,phys_idx] = 1
+    #     X_cat[:,-(N+1):] = x
+    # else:
+        X_cat[:,-N:] = x
+    return X_cat
+
+def flatten(list_of_lists):
+    return list(chain.from_iterable(list_of_lists))
+
+def noise_compensation_params(subs_train,Y_train,phys_train,cvn,Rs):
     c = 0
-    m = len(epsilon)
-    for j in np.arange(m):
-        if epsilon[j] > epsilon_prev:
-            x.append(epsilon_prev)
-            y.append(c/m)
-        c = c+1
-    acc = c/m
-    return x,y,acc
+    Y = []
+    print(Rs)
+    S = np.zeros((len(Rs),1))
+    for r in np.arange(c,len(Rs)):
+        rs = int(Rs[r]) 
+        for k in np.arange(c,len(subs_train)):
+            test_id = subs_train[k]
+            train_indexc = subs_train != test_id
+            y_train0 = Y_train[train_indexc]
+            phys_train0 = phys_train[train_indexc]
+            y_cat = y_train0 <= 0.3
+            idy = np.where(y_cat==1)
 
-def latex_sci(number, sig_fig=2):
-    ret_string = "{0:.{1:d}e}".format(number, sig_fig)
-    a, b = ret_string.split("e")
-    # remove leading "+" and strip leading zeros
-    b = int(b)
-    return a + 'x10^{' + str(b)+'}'
+            sigma0 = np.std(y_train0[phys_train0==0])
+            sigma1 = np.std(y_train0[phys_train0==1])
+            if np.isnan(sigma0):
+                sigma0 = 0
+            if np.isnan(sigma1):
+                sigma1 = 0
+            sigma = sigma0*(phys_train0==0).astype(float)+sigma1*(phys_train0==1).astype(float)
+
+            Q = 2
+            for jj in np.arange(Q):
+                # Resample to avoid stratification errors
+                while np.sum(y_cat) < cvn:
+                    np.random.seed(rs)
+                    idyr = np.random.choice(np.asarray(idy).ravel())
+                    y_train0 = np.append(y_train0,y_train0[idyr])
+                    sigma = np.append(sigma,sigma[idyr])
+                    y_cat = y_train0 <= 0.3
+                    rs = rs+1
+                    y_train_n = y_train0
+                    y_train_n = np.append(y_train_n,y_train0+(1.96*sigma)*np.random.normal(0,1,1)) # 6 best
+                    y_cat = y_train_n <= 0.3
+            
+            y_train = y_train_n
+            Y.append(y_train.ravel())
+        S[r] = np.var(flatten(Y))
+        r_star = np.argmin(S)
+
+    return r_star   
+
+def noise_compensation_multi_params(subs_train,Y_train,phys_train,cvn,Rs):
+    c = 0
+    Y = []
+    print(Rs)
+    S = np.zeros((len(Rs),1))
+    for r in np.arange(c,len(Rs)):
+        rs = int(Rs[r]) 
+        for k in np.arange(c,len(subs_train)):
+            test_id = subs_train[k]
+            train_indexc = subs_train != test_id
+            y_train0 = Y_train[train_indexc]
+            phys_train0 = phys_train[train_indexc]
+            y_cat = y_train0 <= 0.3
+            idy = np.where(y_cat==1)
+
+            sigma0 = np.std(y_train0[phys_train0==0])
+            sigma1 = np.std(y_train0[phys_train0==1])
+            sigma2 = np.std(y_train0[phys_train0==2])
+            if np.isnan(sigma0):
+                sigma0 = 0
+            if np.isnan(sigma1):
+                sigma1 = 0
+            sigma = sigma0*(phys_train0==0).astype(float)+sigma1*(phys_train0==1).astype(float)+sigma2*(phys_train0==2).astype(float)
+
+            Q = 2
+            y_train_n = y_train0
+            for jj in np.arange(Q):
+                # Resample to avoid stratification errors
+                while np.sum(y_cat) < cvn:
+                    np.random.seed(rs)
+                    idyr = np.random.choice(np.asarray(idy).ravel())
+                    y_train0 = np.append(y_train0,y_train0[idyr])
+                    sigma = np.append(sigma,sigma[idyr])
+                    y_cat = y_train0 <= 0.3
+                    rs = rs+1
+                    y_train_n = y_train0
+                    y_train_n = np.append(y_train_n,y_train0+(1.96*sigma)*np.random.normal(0,1,1)) # 6 best
+                    y_cat = y_train_n <= 0.3
+            
+            y_train = y_train_n
+            Y.append(y_train.ravel())
+        S[r] = np.var(flatten(Y))
+        r_star = np.argmin(S)
+
+    return r_star   
+
+def rater_transform(phys,y,X):
+    M = np.zeros((len(np.unique(phys)),1))
+    S = np.zeros((len(np.unique(phys)),1))
+    P = np.unique(phys)
+    for j in np.arange(len(P)):
+        M[j] = np.mean(y[phys==P[j]])
+        S[j] = np.std(y[phys==P[j]])
+
+    S[S==0] = np.min(S[S>0])
+    y_aug = y
+    X_aug = X
+    for k in np.arange(len(y)):
+        for kk in np.arange(len(P)):
+            rater_k = phys[k]
+            if kk != rater_k:
+                # print(S.shape)
+                # print(kk)
+                # print(rater_k)
+                y_kk = (S[int(kk)]/S[np.where(P==int(rater_k))])*(y[int(k)]-M[np.where(P==int(rater_k))])+M[int(kk)]
+                # print(y_kk[0])
+                y_aug = np.hstack((y_aug,y_kk[0]))
+                X_aug = np.vstack((X_aug,X[k,:].reshape(1,-1)))
+    return X_aug, y_aug
