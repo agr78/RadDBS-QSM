@@ -29,8 +29,11 @@ import sys
 import collections
 import math
 import nibabel as nib
-import torch
-from torch import nn
+try:
+    import torch
+    from torch import nn
+except:
+    print('Skipping torch import')
 from PIL import Image
 import re
 import nrrd
