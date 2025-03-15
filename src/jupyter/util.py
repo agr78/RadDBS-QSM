@@ -589,6 +589,7 @@ def slice_collect(subsc,per_change,pre_metric,pre_comp,pshape,roi_l,roi_u,mask_c
 def filter_data(file_path,cv_names,filter_data):
     df = pd.read_csv(file_path)
     dfd = df.copy()
+
     if filter_data == True:
         # Drop blank columns
         try:
@@ -623,6 +624,7 @@ def filter_data(file_path,cv_names,filter_data):
                     motor_df.rename(columns={columnName:columnName[4:]},inplace=True)
         # Drop non-motor (III) columns
         for (columnName, columnData) in motor_df.iteritems():
+            print(columnName)
             if columnName in cv_names:
                 print('Keeping',columnName)
                 next
