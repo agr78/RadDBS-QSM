@@ -1461,3 +1461,10 @@ def rater_transform(phys,y,X):
                 y_aug = np.hstack((y_aug,y_kk[0]))
                 X_aug = np.vstack((X_aug,X[k,:].reshape(1,-1)))
     return X_aug, y_aug
+
+def latex_sci(number, sig_fig=2):
+    ret_string = "{0:.{1:d}e}".format(number, sig_fig)
+    a, b = ret_string.split("e")
+    # remove leading "+" and strip leading zeros
+    b = int(b)
+    return a + 'x10^{' + str(b)+'}'
