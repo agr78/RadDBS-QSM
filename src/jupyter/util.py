@@ -622,12 +622,20 @@ def filter_data(file_path,cv_names,filter_data):
                 if columnName[1].isdigit():
                     motor_df.rename(columns={columnName:columnName[4:]},inplace=True)
         # Drop non-motor (III) columns
-        for (columnName, columnData) in motor_df.iteritems():
-            if columnName in cv_names:
-                print('Keeping',columnName)
-                next
-            else:
-                motor_df.drop(columnName,axis=1,inplace=True)
+        try:
+            for (columnName, columnData) in motor_df.iteritems():
+                if columnName in cv_names:
+                    print('Keeping',columnName)
+                    next
+                else:
+                    motor_df.drop(columnName,axis=1,inplace=True)
+        except:
+            for (columnName, columnData) in motor_df.items():
+                if columnName in cv_names:
+                    print('Keeping',columnName)
+                    next
+                else:
+                    motor_df.drop(columnName,axis=1,inplace=True)
         # Drop subheader
         motor_df = motor_df.tail(-1)
         motor_df = motor_df.replace('na',np.nan)
@@ -1302,3 +1310,7 @@ def latex_sci(number, sig_fig=2):
     # remove leading "+" and strip leading zeros
     b = int(b)
     return a + 'x10^{' + str(b)+'}'
+
+
+def ceil(x,n):
+    return np.ceil(x*(10**(n-1)))/10**(n-1)
