@@ -19,8 +19,8 @@ import sklearn.model_selection as sms
 import sklearn.preprocessing as skp
 from sklearn.neighbors import NearestNeighbors
 import scipy
-from scipy.stats import linregress
 import scipy.stats as stats
+from scipy.stats import linregress
 import smogn
 from smogn.phi import phi
 from smogn.phi_ctrl_pts import phi_ctrl_pts
@@ -29,18 +29,18 @@ import sys
 import collections
 import math
 import nibabel as nib
-try:
-    import torch
-    from torch import nn
-except:
-    print('Skipping torch import')
+# try:
+#     import torch
+#     from torch import nn
+# except:
+#     print('Skipping torch import')
 from PIL import Image
 import re
 import nrrd
-try:
-    from torchvision.models.feature_extraction import create_feature_extractor
-except:
-    print('Skipping torch import')
+# try:
+#     from torchvision.models.feature_extraction import create_feature_extractor
+# except:
+#     print('Skipping torch import')
 
 def blockPrint():
     sys.stdout = open(os.devnull, 'w')
@@ -85,12 +85,9 @@ def pyvis(volume,figx,figy,colormap,w,l,cmin,cmax):
     fig, ax = plt.subplots()
     ax.volume = volume
     ax.index = volume.shape[0]//2
-    if w == 0 and l == 0:
-        im = ax.imshow(volume[ax.index],cmap=colormap)
-    else:
-        volume[volume<-((w-l)//2)] = -(w-l)//2
-        volume[volume>((w-l)//2)] = (w-l)//2
-        im = ax.imshow(volume[ax.index],cmap=colormap,vmin=cmin, vmax=cmax)
+    volume[volume<-((w-l)//2)] = -(w-l)//2
+    volume[volume>((w-l)//2)] = (w-l)//2
+    im = ax.imshow(volume[ax.index],cmap=colormap,vmin=cmin, vmax=cmax)
    
     divider = make_axes_locatable(ax)
     cax = divider.append_axes("right", size="5%", pad=0.05)
@@ -625,12 +622,20 @@ def filter_data(file_path,cv_names,filter_data):
                 if columnName[1].isdigit():
                     motor_df.rename(columns={columnName:columnName[4:]},inplace=True)
         # Drop non-motor (III) columns
-        for (columnName, columnData) in motor_df.iteritems():
-            if columnName in cv_names:
-                print('Keeping',columnName)
-                next
-            else:
-                motor_df.drop(columnName,axis=1,inplace=True)
+        try:
+            for (columnName, columnData) in motor_df.iteritems():
+                if columnName in cv_names:
+                    print('Keeping',columnName)
+                    next
+                else:
+                    motor_df.drop(columnName,axis=1,inplace=True)
+        except:
+            for (columnName, columnData) in motor_df.items():
+                if columnName in cv_names:
+                    print('Keeping',columnName)
+                    next
+                else:
+                    motor_df.drop(columnName,axis=1,inplace=True)
         # Drop subheader
         motor_df = motor_df.tail(-1)
         motor_df = motor_df.replace('na',np.nan)
@@ -935,7 +940,6 @@ def rad_smogn(X_t,y_t,yo1,yu,Rmo,Rmu,t,p,rs):
     warnings.simplefilter(action='ignore', category=pd.errors.PerformanceWarning)
     warnings.simplefilter(action='ignore', category=RuntimeWarning)
     # Create data frame for SMOGN generation
-    np.random.seed(rs)
     n_cases = len(y_t)
     D = pd.DataFrame(np.hstack((X_t,(np.asarray(y_t).reshape(n_cases,1)))))
     for col in D.columns:
@@ -965,7 +969,7 @@ def rad_smogn(X_t,y_t,yo1,yu,Rmo,Rmu,t,p,rs):
     # Conduct SMOGN
     print('Prior to SMOGN sampling, mean is',X_t.mean(),'standard deviation is',X_t.std())
     X_smogn = smogn.smoter(data = D, y = str(D.columns[-1]),
-                           rel_method='manual',rel_ctrl_pts_rg = Rm)
+                           rel_method='manual',rel_ctrl_pts_rg = Rm, seed = rs)
     #print('After SMOGN sampling, mean is',X_smogn[:,:-1].mean(),'standard deviation is',X_smogn[:,:-1].std())
     y_smogn = np.asarray(X_smogn)[:,-1]
     X_smogn = np.asarray(X_smogn)[:,:-1]
@@ -998,6 +1002,11 @@ def calc_entropy(s):
 def eval_prediction(results,y_test,names,fig_size):
     plt.rcParams["figure.figsize"] = fig_size
     n_models = results.shape[0]
+    ylim = 1
+    xlim = 1
+    ofx = 0.25
+    ofy = 0.25
+    fs = 32
     # Cross validation results
     if np.mod(n_models,2)==0:
         plt.rcParams["figure.figsize"] = (fig_size[0]/2,fig_size[1]*2)
@@ -1013,9 +1022,25 @@ def eval_prediction(results,y_test,names,fig_size):
         [fig,ax] = plt.subplots(1,n_models,sharex=True, sharey=True)
         ax_reshape = 0
     for j in np.arange(n_models):
-        lr_prepost = linregress(results[j],y_test)
+        print(n_models)
+        if n_models == 1:
+            results = np.expand_dims(results[j],1)
+            y_test = np.expand_dims(y_test,1)
+            lr_prepost = linregress(results.ravel(),y_test.ravel())
+            y_test = np.squeeze(y_test)
+        else:
+            lr_prepost = linregress(results[j],y_test)
         ax[j].scatter(results[j],y_test)
         ax[j].plot(results[j],results[j]*lr_prepost.slope+lr_prepost.intercept,'-r')
+        try:
+            ci,pi,x_line,y_line = confidence_interval(np.median(results[j],axis=0),y_test,ylim)
+        except:
+            ci,pi,x_line,y_line = confidence_interval(results[j],y_test,ylim)
+        ax[j].fill_between(x_line,y_line+ci,y_line-ci,color = 'r',label = '95% confidence interval',alpha=0.05)
+        pl = r'$'+latex_sci(lr_prepost.pvalue,0)+'$'
+        # ax[j].text(ofx+0.013,ofy-0.01,'$y$ = '+str(np.round(lr_prepost.slope,2))+'$x$ + '+str(np.round(lr_prepost.intercept,2))+'\n'+'$r$ = '+str(np.round(lr_prepost.rvalue,2))+'\n'+'$p$ = '+pl,
+        #                     ha='left', va='bottom', transform=ax[j].transAxes,fontsize=fs,
+        #                     bbox=dict(facecolor='white', edgecolor='lightgray', boxstyle='round')) 
         ax[j].set_title(names[j])
         ax[j].set_ylabel("DBS improvement")
         ax[j].set_xlabel("Prediction")
@@ -1029,7 +1054,9 @@ def eval_prediction(results,y_test,names,fig_size):
     elif ax_reshape == 2:
         ax = np.reshape(ax, (2, int(n_models/2)))
     plt.style.use('default')
-    plt.show
+    plt.xlim(0,xlim)
+    plt.ylim(0,ylim)
+    plt.show()
 
 def gridsearch_pickparams(model,cvn,param_grid,X0_tt,y_train,scoring,n_js):
     gsc = sms.GridSearchCV(
@@ -1184,7 +1211,7 @@ def nstack(a,b,gpu):
         c = a+b
     return c
 
-def confidence_interval(res,pc,xmax):
+def confidence_interval(res,pc,xylim):
     lr = stats.linregress(res,pc)
     x_mean = np.mean(res)
     y_mean = np.mean(pc)
@@ -1206,7 +1233,7 @@ def confidence_interval(res,pc,xmax):
     tr = r*np.sqrt(n-2)/(np.sqrt(1-r**2))
 
     # to plot the adjusted model
-    x_line = np.linspace(0,xmax,100)
+    x_line = np.linspace(0,xylim,100)
     y_line = lr.slope*x_line+lr.intercept
     # confidence interval
     ci = t*std_error*(1/n+(x_line-x_mean)**2/np.sum((x-x_mean)**2))**0.5
@@ -1256,8 +1283,7 @@ def classification_sensitivity(y_pred,y_true):
     sns = tp/(tp+fn)
     return sns
 
-def make_feature_map(subject,feat_name,mask,rois,w,l,cmin,cmax,normalize):
-
+def make_feature_map(subject,feat_name,pq,rois,w,l,cmin,cmax):
     # Import the maps from `.nrrd` files
     r_num1 = rois[0]
     r_num2 = rois[1]
@@ -1265,53 +1291,87 @@ def make_feature_map(subject,feat_name,mask,rois,w,l,cmin,cmax,normalize):
 
     # ROI 1
     hr1,_ = nrrd.read('./'+feat_name+'_'+str(pr)+'_'+str(r_num1)+'.nrrd')
-    if np.sum(mask) > 0:
-        hrq1,_ = nrrd.read('./maps/qsm_crop_'+str(pr)+'_'+str(r_num1)+'.nrrd')
-        mr1,mrq1 = nrrd.read('./maps/seg_crop_'+str(pr)+'_'+str(r_num1)+'.nrrd')
+    if pq == True:
+        hrq1,_ = nrrd.read('./qsm_crop_'+str(pr)+'_'+str(r_num1)+'.nrrd')
+        mr1,mrq1 = nrrd.read('./seg_crop_'+str(pr)+'_'+str(r_num1)+'.nrrd')
         hr1 = hrq1*(abs(hr1)!=0)
     
     # ROI 2
     hr2,_ = nrrd.read('./'+feat_name+'_'+str(pr)+'_'+str(r_num2)+'.nrrd')
-    if np.sum(mask) > 0:
-        hrq2,_ = nrrd.read('./maps/qsm_crop_'+str(pr)+'_'+str(r_num2)+'.nrrd')
-        mr2,mrq2 = nrrd.read('./maps/seg_crop_'+str(pr)+'_'+str(r_num2)+'.nrrd')
+    if pq == True:
+        hrq2,_ = nrrd.read('./qsm_crop_'+str(pr)+'_'+str(r_num2)+'.nrrd')
+        mr2,mrq2 = nrrd.read('./seg_crop_'+str(pr)+'_'+str(r_num2)+'.nrrd')
         hr2 = hrq2*(abs(hr2)!=0)
 
     # Pad the ROIs to the same shape
     px,py,pz = np.asarray(hr1.shape)-np.asarray(hr2.shape)
+    px,py,pz
     hr1p = np.pad(hr1,((0,abs(min(0,px))),(0,abs(min(0,py))),(0,abs(min(0,pz)))))
     hr2p = np.pad(hr2,((0,abs(max(0,px))),(0,abs(max(0,py))),(0,abs(max(0,pz)))))
     hr = np.flipud(np.concatenate((hr1p,hr2p),axis=2))
+    pyvis(hr,10,10,'gray',w,l,cmin,cmax)
 
-    if normalize == True:
-        hr = hr/np.amax(hr)
-    
-    if np.sum(mask) > 0:
-        pyvis(mask*hr,10,10,'gray',w,l,cmin,cmax)
+def rec(res,pc):
+        y_true = pc
+        y_pred = res
+        epsilon_0 = 0.0
+        epsilon_max = 1.0
+        d_epsilon = 0.05
+        y = []
+        x = np.arange(epsilon_0,epsilon_max,d_epsilon)
+        epsilon = np.abs(y_true-y_pred) 
+        for j in np.arange(len(x)):
+            c = 0
+            for k in np.arange(len(epsilon)):
+                if epsilon[k] < x[j]:
+                    c = c+1
+            y.append(c/len(y_true))
+        auc_rec = scipy.integrate.simps(y,x)/epsilon_max
+        return x, np.array(y), auc_rec
+
+def plot_rec(results,names,fig_size):
+    plt.rcParams["figure.figsize"] = fig_size
+    n_models = results.shape[0]
+    # Cross validation results
+    if np.mod(n_models,2)==0:
+        plt.rcParams["figure.figsize"] = (fig_size[0]/2,fig_size[1]*2)
+        [fig,ax] = plt.subplots(2,int(n_models//2),sharex=True, sharey=True)
+        ax = np.ravel(ax)
+        ax_reshape = 2
+    elif np.mod(n_models,3)==0:
+        plt.rcParams["figure.figsize"] = (fig_size[0]/3,fig_size[1]*3)
+        [fig,ax] = plt.subplots(3,int(n_models//3),sharex=True, sharey=True)
+        ax = np.ravel(ax)
+        ax_reshape = 3
     else:
-        pyvis(hr,10,10,'gray',w,l,cmin,cmax)
+        [fig,ax] = plt.subplots(1,n_models,sharex=True, sharey=True)
+        ax_reshape = 0
+    for j in np.arange(n_models):
+        lr_prepost = linregress(results[j],y_test)
+        x,y,eta = rec(pre_imp,per_change)
+        ax[j].plot(x,y,linewidth=5,label=f"{names[j]} %0.2f" % eta)
+    if ax_reshape == 3:
+        ax = np.reshape(ax, (3, int(n_models/3)))
+    elif ax_reshape == 2:
+        ax = np.reshape(ax, (2, int(n_models/2)))
+    plt.xlabel('Absolute deviation',fontsize=fs)
+    plt.ylabel('Accuracy',fontsize=fs)
+    plt.xlim([0,1])
+    plt.title('Regression Error Characteristic',fontsize=fs)
+    ax.xaxis.set_tick_params(labelleft=True,labelsize=fs//1.5)
+    ax.yaxis.set_tick_params(labelleft=True,labelsize=fs//1.5)
+    ax.legend(bbox_to_anchor=(0.215,0.375),fontsize=fs//1.5)
+    plt.style.use('default')
+    plt.show()
 
-def nrrd_read(file):
-    hr,_ = nrrd.read(file)
-    pyvis(hr,10,10,'gray',0,0,0,0)
 
-def feature_map_mask(subject,feat_name,pq,rois):
+def latex_sci(number, sig_fig=2):
+    ret_string = "{0:.{1:d}e}".format(number, sig_fig)
+    a, b = ret_string.split("e")
+    # remove leading "+" and strip leading zeros
+    b = int(b)
+    return a + 'x10^{' + str(b)+'}'
 
-    # Import the maps from `.nrrd` files
-    r_num1 = rois[0]
-    r_num2 = rois[1]
-    pr = subject
 
-    # ROI 1
-    hr1,_ = nrrd.read('./'+feat_name+'_'+str(pr)+'_'+str(r_num1)+'.nrrd')
-    
-    # ROI 2
-    hr2,_ = nrrd.read('./'+feat_name+'_'+str(pr)+'_'+str(r_num2)+'.nrrd')
-
-    # Pad the ROIs to the same shape
-    px,py,pz = np.asarray(hr1.shape)-np.asarray(hr2.shape)
-    hr1p = np.pad(hr1,((0,abs(min(0,px))),(0,abs(min(0,py))),(0,abs(min(0,pz)))))
-    hr2p = np.pad(hr2,((0,abs(max(0,px))),(0,abs(max(0,py))),(0,abs(max(0,pz)))))
-    hr = np.flipud(np.concatenate((hr1p,hr2p),axis=2))
-    mask = abs(hr) != 0
-    return mask
+def ceil(x,n):
+    return np.ceil(x*(10**(n-1)))/10**(n-1)

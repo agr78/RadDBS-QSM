@@ -1,59 +1,99 @@
-import nibabel as nib
+import IPython
+from pathlib import Path
 import os
-import pickle
+import nibabel as nib
 import numpy as np
 
-def data_loader(q_directory,s_directory,reload,suffix,qsm_prefix):
-    # Set window level
+def get_raddbs_path(notebook_name):
+    raddbs_path = notebook_name[:notebook_name.index("src")]
+    return raddbs_path
 
+def s1data(raddbs_path,nii_dir,verbose):
     # Load data
+    nrows = 256
+    ncols = 256
+    nslices = 160
     segs = []
-    qsms = []
     voxel_sizes = []
-    s_dir = s_directory
-    q_dir = q_directory
-    s_directory = os.listdir(s_directory)
-    s_directory = sorted(s_directory)
 
+    trackers = []
+    q_directory = Path(raddbs_path+nii_dir+'qsm')
     q_directory = os.listdir(q_directory)
     q_directory = sorted(q_directory)
 
+    s_directory = Path(raddbs_path+nii_dir+'seg')
+    s_directory = os.listdir(s_directory)
+    s_directory = sorted(s_directory)
+    m_directory = Path(raddbs_path+nii_dir+'masks')
+    m_directory = os.listdir(m_directory)
+    m_directory = sorted(m_directory)
     case_list = []
     d_count = 0
-    if reload == 1:
-        for seg_filename in s_directory:
-            id = seg_filename[12:14]
-            if os.path.isfile(s_dir+seg_filename) and os.path.isfile(q_dir+qsm_prefix+str(id)+'.nii.gz'):
-                seg = nib.load(s_dir+seg_filename)
-                voxel_size = seg.header['pixdim'][0:3]
-                voxel_sizes.append(voxel_size)
-                segs.append(seg.get_fdata())
-                qsm = nib.load(q_dir+qsm_prefix+str(id)+'.nii.gz')
-                qsms.append(qsm.get_fdata())
-                print('Appending arrays with segmentation',seg_filename,'and QSM',str(id)+'.nii.gz')
-                case_list.append('qsm_'+str(id)+'.nii.gz')
-                n_cases = len(segs)
-                d_count = d_count+1
-                with open('./pickles/segs_'+suffix, 'wb') as fp:  
-                    pickle.dump(segs, fp)
 
-                with open('./pickles/qsms_'+suffix, 'wb') as fp:  
-                    pickle.dump(qsms, fp)
-                
-                with open('./pickles/qsms_'+suffix, 'wb') as fp:  
-                    pickle.dump(case_list, fp)
-            else:
-                print('Skipping',seg_filename,'and QSM',str(id))
+    #if reload == 1:
+    # for seg_filename in s_directory:
+    #     id = seg_filename[12:14]
 
-    else:
-        with open('/data/Ali/RadDBS-QSM/src/jupyter/pickles/segs_'+suffix, "rb") as fp:  
-            segs = pickle.load(fp)
-            n_cases = len(segs)
-        with open('/data/Ali/RadDBS-QSM/src/jupyter/pickles/qsms_'+suffix, "rb") as fp:  
-            qsms = pickle.load(fp)
-        with open('/data/Ali/RadDBS-QSM/src/jupyter/pickles/cases_'+suffix, "rb") as fp:  
+    # with open('/home/ali/RadDBS-QSM/src/jupyter/pickles/qsms_'+suffix, "rb") as fp:  
+    #     qsms = pickle.load(fp)
+    # with open('/home/ali/RadDBS-QSM/src/jupyter/pickles/cases_'+suffix, "rb") as fp:  
+    #         cases = pickle.load(fp)
+
+    for filename in q_directory:
+        seg_filename = s_directory[d_count]
+        mask_filename = m_directory[d_count]
+        seg = nib.load(Path(raddbs_path+nii_dir+'/seg/'+seg_filename))
+        mask = nib.load(Path(raddbs_path+nii_dir+'masks/'+mask_filename))
+        voxel_size = seg.header['pixdim'][0:3]
+        voxel_sizes.append(voxel_size)
+
+        ## OUT
+        segs.append(seg.get_fdata()[:nrows,:ncols,:nslices])
+        
+        # qsm = nib.load(Path(raddbs_path+'/data/nii/chh/orig/qsm/'+filename))
+        # qsms.append(qsm.get_fdata()[:nrows,:ncols,:nslices])
+        if verbose is True:
+            print('Appending arrays with segmentation',seg_filename,'QSM,',filename,'and mask',mask_filename)
+        case_list.append(filename)
+
+        ## OUT
+        n_cases = len(segs)
+
+        d_count = d_count+1
+    return segs, n_cases
+
+def s1cvdata(df,segs,raddbs_path,nii_dir,verbose):
+    # Patient IDs
+    n_cases = len(segs)
+    subject_id = np.asarray(df[df.columns[0]])[1:]
+    s_directory = Path(raddbs_path+nii_dir+'seg')
+    s_directory = os.listdir(s_directory)
+    s_directory = sorted(s_directory)
+
+    # Only extract ROI if it is present in all cases
+    seg_labels_all = segs[0]
+    case_number = np.zeros_like(np.asarray(s_directory))
+    for i in range(n_cases):
+        case_number[i] = float(s_directory[i][:2])
+    subject_id_corr = subject_id[np.in1d(subject_id,case_number)]
+    age = np.nan_to_num(np.asarray(df[df.columns[-4]])[1:][np.in1d(subject_id,case_number)].astype(float))
+    sex = np.nan_to_num(np.asarray(df[df.columns[-3]])[1:][np.in1d(subject_id,case_number)].astype(float))
+    dd = np.nan_to_num(np.asarray(df[df.columns[-2]])[1:][np.in1d(subject_id,case_number)].astype(float))
+    ledd = np.nan_to_num(np.asarray(df[df.columns[-1]])[1:][np.in1d(subject_id,case_number)].astype(float))
+
+    if verbose is True:
+        for i in np.arange(n_cases):
             try:
-                case_list = pickle.load(fp)
+                print('Found ROIs',str(np.unique(segs[i])),'at segmentation directory file',s_directory[i],'for case',str(subject_id_corr[i]))
             except:
-                case_list = open('/data/Ali/RadDBS-QSM/src/jupyter/pickles/cases_'+suffix,'r')
-    return segs, qsms, n_cases, case_list
+                case_list = open('/home/ali/RadDBS-QSM/src/jupyter/pickles/cases_'+suffix,'r')
+                print('Case',subject_id[i],'quarantined')
+
+    pre_updrs_off =  np.asarray(df[df.columns[3]][np.hstack((False,np.in1d(subject_id,subject_id_corr)))])                                
+    pre_updrs_on =  np.asarray(df[df.columns[4]][np.hstack((False,np.in1d(subject_id,subject_id_corr)))])
+    post_updrs_off =  np.asarray(df[df.columns[6]][np.hstack((False,np.in1d(subject_id,subject_id_corr)))])
+
+    per_change = (np.asarray(pre_updrs_off).astype(float)-np.asarray(post_updrs_off).astype(float))/(np.asarray(pre_updrs_off).astype(float))
+    lct_change = (np.asarray(pre_updrs_off).astype(float)-(np.asarray(pre_updrs_on)).astype(float))/(np.asarray(pre_updrs_off).astype(float))
+    subsc = subject_id_corr
+    return age,sex,dd,ledd,subsc,pre_updrs_off,pre_updrs_on,post_updrs_off,per_change,lct_change
