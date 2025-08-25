@@ -1,0 +1,98 @@
+# RadDBS-QSM
+Repository for 
+>[_Technical Feasibility of Quantitative Susceptibility Mapping Radiomics for Predicting
+Deep Brain Stimulation Outcomes in Parkinson’s Disease_](https://openreview.net/forum?id=wFkiqB5spT&referrer=%5Bthe%20profile%20of%20Alexandra%20Grace%20Roberts%5D(%2Fprofile%3Fid%3D~Alexandra_Grace_Roberts1)) 
+>published in [Neurosurgery](https://journals.lww.com/neurosurgery/pages/default.aspx) 
+
+and
+
+>[_Radiomic Prediction of Parkinson’s Disease Deep Brain Stimulation Surgery Outcomes using Quantitative Susceptibility Mapping and Label Noise Compensation_](https://www.brainstimjrnl.com/article/S1935-861X(25)00166-4/fulltext) 
+>published in [Brain Stimulation](https://www.brainstimjrnl.com/)
+
+
+## Summary
+A radiomic model based on presurgical quantitative susceptibility maps (QSM) is used to predict patient outcomes to deep brain stimulation (DBS) surgery for the treatment of Parkinson's diease.
+
+<br/>
+
+<p align="center">
+   <img src="./data/jpg/wf.jpg"/></br>
+   <i>Model overview.</i>
+</p>
+
+<br/>
+
+[This work](https://huggingface.co/papers/2505.23353) presents a framework to: <br/>
+* Extract radiomic features for input into a regression model to predict post-surgical motor improvement. <br/>
+* Incorporate clinical variables such as age, sex, etc.
+* Provide a novel label noise compensation technique improving outcome prediction. <br/>
+
+
+## Contents
+Demonstration code can be found in `main.ipynb` <br/>
+Radiomic [features](https://huggingface.co/datasets/agr78/PRLx-GAN-synthetic-rim) can be found in [`npy`](https://github.com/agr78/PRLx-GAN/tree/main/png) <br/>
+Customizable [extraction code](https://huggingface.co/agr78/PRLx-GAN) is located in [`extract.py`](https://github.com/agr78/PRLx-GAN/tree/main/net) <br/>
+Subject feature maps such as the one below, are generated in `fm.ipynb`
+
+## Preliminaries
+To download the radiomic features, ensure [Git Large File Service](https://git-lfs.com/) is installed
+```
+sudo apt-get install git-lfs
+git lfs install
+```
+The `install.sh` script will skip feature extraction unless `\your\QSM\data` is replaced by a valid path
+
+## Installation
+Clone the repository with
+```
+git clone https://github.com/agr78/RadDBS-QSM.git
+```
+Navigate to the repository
+```
+cd RadDBS-QSM
+```
+Run the setup script
+```
+source ./src/install.sh
+```
+Wait...then open the Jupyter notebook and select the `pdradenv` environment
+```
+jupyter notebook main.ipynb
+```
+
+## Notes
+* This tool was developed for use with [QSM](https://mriquestions.com/quantitative-susceptibility.html), but other contrasts may be explored.
+
+* If the QSM has not been reconstructed, [this repository](https://github.com/agr78/mSMV?tab=readme-ov-file#summary) provides code to obtain the whole brain susceptibility.
+
+* If manual region-of-interest masks are not available, [this repository](https://github.com/agr78/mSMV/blob/atlas/README.md) provides bash scripts to create a sample atlas and register individual cases.
+
+
+
+## Publications
+If this code is used, please cite the following:
+> [Neurosurgery Article](https://onlinelibrary.wiley.com/doi/10.1002/mrm.29963): A. G. Roberts et al., "Technical Feasibility of Quantitative Susceptibility Mapping Radiomics for Predicting Deep Brain Stimulation Outcomes in Parkinson’s Disease, 2025, DOI: 10.1002/mrm.29963
+> 
+> [Preprint](https://doi.org/10.1101/2024.12.26.24319663): A. G. Roberts et al., "Quantitative Susceptibility Mapping Radiomics with Label Noise Compensation for Predicting Deep Brain Stimulation Outcomes in Parkinson’s Disease". medRxiv pre-print server, 2024-12-26, medRxiv:24319663 
+>
+
+## BibTex
+
+```bibtex
+@article{Roberts_RadDBS-QSM_2025,
+   author = {Roberts, Alexandra G. and Zhang, Jinwei and Tozlu, Ceren and Romano, Dominick and Akkus, Sema and Kim, Heejong, and Sabuncu, Mert R. and Spincemaille, Pascal and Li, Jianqi and Wang, Yi and Wu, Xi and Kopell, Brian H.},
+   title = {Technical Feasibility of Quantitative Susceptibility Mapping Radiomics for Predicting Deep Brain Stimulation Outcomes in Parkinson’s Disease},
+   journal = {Neurosurgery},
+   volume = {91},
+   number = {4},
+   pages = {1586-1597},
+   ISSN = {0740-3194},
+   DOI = {10.1002/mrm.29963},
+   url = {https://dx.doi.org/10.1002/mrm.29963},
+   year = {2025},
+   type = {Journal Article}
+}
+```
+
+## Contact
+Please direct questions to [Alexandra Roberts](https://github.com/agr78) at agr78@cornell.edu.
