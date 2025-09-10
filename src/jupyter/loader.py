@@ -14,6 +14,7 @@ def s1data(raddbs_path,nii_dir,verbose):
     ncols = 256
     nslices = 160
     segs = []
+    qsms = []
     voxel_sizes = []
 
     trackers = []
@@ -50,8 +51,8 @@ def s1data(raddbs_path,nii_dir,verbose):
         ## OUT
         segs.append(seg.get_fdata()[:nrows,:ncols,:nslices])
         
-        # qsm = nib.load(Path(raddbs_path+'/data/nii/chh/orig/qsm/'+filename))
-        # qsms.append(qsm.get_fdata()[:nrows,:ncols,:nslices])
+        qsm = nib.load(Path(raddbs_path+'/data/nii/chh/orig/qsm/'+filename))
+        qsms.append(qsm.get_fdata()[:nrows,:ncols,:nslices])
         if verbose is True:
             print('Appending arrays with segmentation',seg_filename,'QSM,',filename,'and mask',mask_filename)
         case_list.append(filename)
@@ -60,7 +61,7 @@ def s1data(raddbs_path,nii_dir,verbose):
         n_cases = len(segs)
 
         d_count = d_count+1
-    return segs, n_cases
+    return segs, qsms, n_cases
 
 def s1cvdata(df,segs,raddbs_path,nii_dir,verbose):
     # Patient IDs

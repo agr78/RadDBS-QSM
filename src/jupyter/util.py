@@ -1022,7 +1022,6 @@ def eval_prediction(results,y_test,names,fig_size):
         [fig,ax] = plt.subplots(1,n_models,sharex=True, sharey=True)
         ax_reshape = 0
     for j in np.arange(n_models):
-        print(n_models)
         if n_models == 1:
             results = np.expand_dims(results[j],1)
             y_test = np.expand_dims(y_test,1)
