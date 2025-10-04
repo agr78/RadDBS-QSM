@@ -51,9 +51,19 @@ import os
 import pickle
 patch_sklearn()
 
-def train_estimator(subsc,X_all_c,K_all_c,per_change,pre_updrs_off,age,sex,dd,ledd,aug,reg,save,rs0,verbose):
+def train_estimator(subsc,X_all_c,K_all_c,per_change,pre_updrs,age,sex,dd,ledd,aug,reg,save,rs0,verbose):
   results = np.zeros_like(per_change)
   K_nz = []
+  if pre_updrs is not None and K_all_c.shape[0] < X_all_c.shape[1]*X_all_c.shape[2]:
+    K_all_c = np.concatenate((K_all_c,(X_all_c.shape[1]+1)*['pre_updrs']))
+  if age is not None:
+    K_all_c = np.concatenate((K_all_c,['age']))
+  if sex is not None:
+    K_all_c = np.concatenate((K_all_c,['sex']))
+  if dd is not None:
+    K_all_c = np.concatenate((K_all_c,['disease_duration']))
+  if ledd is not None:
+    K_all_c = np.concatenate((K_all_c,['ledd']))
   for j in np.arange(len(subsc)):
         test_id = subsc[j]
         test_index = subsc == test_id
@@ -67,7 +77,7 @@ def train_estimator(subsc,X_all_c,K_all_c,per_change,pre_updrs_off,age,sex,dd,le
           # Cross validation                 
           X0_ss00,_,X_test_ss0 = util.model_scale(skp.StandardScaler(),
                                                       X_train,train_index,X_test,
-                                                      test_index,pre_updrs_off,age,sex,dd,ledd,None,None,None,None,None,False,False,False)
+                                                      test_index,pre_updrs,age,sex,dd,ledd,None,None,None,None,None,False,False,False)
           (mu, sigma) = stats.norm.fit(y_train0)
           kappa = stats.skew(y_train0)
         if aug == 'nc_iid_q':
@@ -77,7 +87,7 @@ def train_estimator(subsc,X_all_c,K_all_c,per_change,pre_updrs_off,age,sex,dd,le
           # Cross validation                 
           X0_ss00,_,X_test_ss0 = util.model_scale(skp.StandardScaler(),
                                                       X_train,train_index,X_test,
-                                                      test_index,pre_updrs_off,age,sex,dd,ledd,None,None,None,None,None,False,False,False)
+                                                      test_index,pre_updrs,age,sex,dd,ledd,None,None,None,None,None,False,False,False)
           (mu, sigma) = stats.norm.fit(y_train0)
           kappa = stats.skew(y_train0)
         else:
@@ -87,7 +97,7 @@ def train_estimator(subsc,X_all_c,K_all_c,per_change,pre_updrs_off,age,sex,dd,le
           # Cross validation                                
           X0_ss0,_,X_test_ss0 = util.model_scale(skp.StandardScaler(),
                                                       X_train,train_index,X_test,
-                                                      test_index,pre_updrs_off,age,sex,dd,ledd,None,None,None,None,None,False,False,False)
+                                                      test_index,pre_updrs,age,sex,dd,ledd,None,None,None,None,None,False,False,False)
           (mu, sigma) = stats.norm.fit(y_train)
           kappa = stats.skew(y_train)
         if aug == 'smogn':
