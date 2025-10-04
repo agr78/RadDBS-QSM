@@ -1,5 +1,5 @@
-
 archive
+/src/elastic_net/
 src/jupyter/pickles/
 src/jupyter/old/
 src/jupyter/phi/
