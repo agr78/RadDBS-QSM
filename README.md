@@ -1,13 +1,13 @@
 # RadDBS-QSM
 Repository for 
->[_Technical Feasibility of Quantitative Susceptibility Mapping Radiomics for Predicting
-Deep Brain Stimulation Outcomes in Parkinson’s Disease_](https://openreview.net/forum?id=wFkiqB5spT&referrer=%5Bthe%20profile%20of%20Alexandra%20Grace%20Roberts%5D(%2Fprofile%3Fid%3D~Alexandra_Grace_Roberts1)) 
->published in [Neurosurgery](https://journals.lww.com/neurosurgery/pages/default.aspx) 
+>_Technical Feasibility of Quantitative Susceptibility Mapping Radiomics for Predicting
+Deep Brain Stimulation Outcomes in Parkinson’s Disease_
+>[published](https://openreview.net/forum?id=wFkiqB5spT&referrer=%5Bthe%20profile%20of%20Alexandra%20Grace%20Roberts%5D(%2Fprofile%3Fid%3D~Alexandra_Grace_Roberts1))  in [Neurosurgery](https://journals.lww.com/neurosurgery/pages/default.aspx) 
 
 and
 
->[_Radiomic Prediction of Parkinson’s Disease Deep Brain Stimulation Surgery Outcomes using Quantitative Susceptibility Mapping and Label Noise Compensation_](https://www.brainstimjrnl.com/article/S1935-861X(25)00166-4/fulltext) 
->published in [Brain Stimulation](https://www.brainstimjrnl.com/)
+>_Radiomic Prediction of Parkinson’s Disease Deep Brain Stimulation Surgery Outcomes using Quantitative Susceptibility Mapping and Label Noise Compensation_ 
+>[published](https://www.brainstimjrnl.com/article/S1935-861X(25)00166-4/fulltext) in [Brain Stimulation](https://www.brainstimjrnl.com/)
 
 
 ## Summary
