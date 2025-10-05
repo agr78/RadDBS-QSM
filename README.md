@@ -22,7 +22,7 @@ A radiomic model based on presurgical quantitative susceptibility maps (QSM) is 
 
 <br/>
 
-[This work](https://huggingface.co/papers/2505.23353) presents a framework to: <br/>
+This work presents a framework to: <br/>
 * Extract radiomic features for input into a regression model to predict post-surgical motor improvement. <br/>
 * Incorporate clinical variables such as age, sex, etc.
 * Provide a novel label noise compensation technique improving outcome prediction. <br/>
