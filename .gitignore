@@ -4,3 +4,12 @@ src/jupyter/pickles/
 src/jupyter/old/
 src/jupyter/phi/
 src/jupyter/npy/
+src/util/
+src/ridge/
+src/mlp/
+src/lasso/
+src/features/
+src/elastic_net/
+src/figs/
+src/csv/
+src/env/
