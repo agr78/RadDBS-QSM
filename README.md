@@ -71,7 +71,7 @@ jupyter notebook main.ipynb
 
 ## Publications
 If this code is used, please cite the following:
-> [Neurosurgery Article](https://onlinelibrary.wiley.com/doi/10.1002/mrm.29963): A. G. Roberts et al., "Technical Feasibility of Quantitative Susceptibility Mapping Radiomics for Predicting Deep Brain Stimulation Outcomes in Parkinson’s Disease, 2025, DOI: 10.1002/mrm.29963
+> [Neurosurgery Article](https://doi.org/10.1227/neu.0000000000003721): A. G. Roberts et al., "Technical Feasibility of Quantitative Susceptibility Mapping Radiomics for Predicting Deep Brain Stimulation Outcomes in Parkinson’s Disease, 2025, DOI: 10.1227/neu.0000000000003721
 > 
 > [Preprint](https://doi.org/10.1101/2024.12.26.24319663): A. G. Roberts et al., "Quantitative Susceptibility Mapping Radiomics with Label Noise Compensation for Predicting Deep Brain Stimulation Outcomes in Parkinson’s Disease". medRxiv pre-print server, 2024-12-26, medRxiv:24319663 
 >
@@ -80,17 +80,19 @@ If this code is used, please cite the following:
 
 ```bibtex
 @article{Roberts_RadDBS-QSM_2025,
-   author = {Roberts, Alexandra G. and Zhang, Jinwei and Tozlu, Ceren and Romano, Dominick and Akkus, Sema and Kim, Heejong, and Sabuncu, Mert R. and Spincemaille, Pascal and Li, Jianqi and Wang, Yi and Wu, Xi and Kopell, Brian H.},
-   title = {Technical Feasibility of Quantitative Susceptibility Mapping Radiomics for Predicting Deep Brain Stimulation Outcomes in Parkinson’s Disease},
-   journal = {Neurosurgery},
-   volume = {91},
-   number = {4},
-   pages = {1586-1597},
-   ISSN = {0740-3194},
-   DOI = {10.1002/mrm.29963},
-   url = {https://dx.doi.org/10.1002/mrm.29963},
-   year = {2025},
-   type = {Journal Article}
+  title    = "Technical feasibility of quantitative susceptibility mapping
+              radiomics for predicting deep brain stimulation outcomes in
+              Parkinson disease",
+  author   = "Roberts, Alexandra G and Zhang, Jinwei and Tozlu, Ceren and
+              Romano, Dominick and Akkus, Sema and Kim, Heejong and Sabuncu,
+              Mert R and Spincemaille, Pascal and Li, Jianqi and Wang, Yi and
+              Wu, Xi and Kopell, Brian H",
+  journal  = "Neurosurgery",
+  month    =  sep,
+  year     =  2025,
+  keywords = "Deep brain stimulation; Machine learning; Parkinson disease;
+              Quantitative susceptibility mapping; Radiomics; Regression",
+  language = "en"
 }
 ```
 
