@@ -55,7 +55,7 @@ Run the setup script
 ```
 source ./src/install.sh
 ```
-Wait...then open the Jupyter notebook and select the `pdradenv` environment
+Wait...then open the Jupyter notebook and select the `RadDBS-QSMenv` environment
 ```
 jupyter notebook main.ipynb
 ```
