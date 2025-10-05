@@ -1000,6 +1000,9 @@ def calc_entropy(s):
     return H
 
 def eval_prediction(results,y_test,names,fig_size):
+    warnings.filterwarnings('ignore', category=RuntimeWarning)
+    warnings.filterwarnings('ignore', category=UserWarning)
+    warnings.filterwarnings('ignore', category=np.VisibleDeprecationWarning)
     plt.rcParams["figure.figsize"] = fig_size
     n_models = results.shape[0]
     ylim = 1

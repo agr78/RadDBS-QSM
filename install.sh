@@ -12,7 +12,7 @@ conda activate RadDBS-QSMenv
 echo Installing packages
 $CONDA_PREFIX/bin/pip install -r requirements.txt 
 # Apply sklearn patch
-mv ./src/patch/_least_angle.py $CONDA_PREFIX/envs/RadDBS-QSMenv/lib/python3.7/site-packages/sklearn/linear_model/_least_angle.py
+mv ./src/patch/_least_angle.py $CONDA_PREFIX/lib/python3.7/site-packages/sklearn/linear_model/_least_angle.py
 # Restore environmental variables
 unset PYTHONWARNINGS
 

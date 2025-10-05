@@ -49,6 +49,10 @@ import nibabel as nib
 import os
 import pickle
 
+warnings.filterwarnings('ignore', category=RuntimeWarning)
+warnings.filterwarnings('ignore', category=UserWarning)
+warnings.filterwarnings('ignore', category=np.VisibleDeprecationWarning)
+
 def train_estimator(subsc,X_all_c,K_all_c,per_change,pre_updrs,age,sex,dd,ledd,aug,reg,save,rs0,verbose):
   results = np.zeros_like(per_change)
   K_nz = []
