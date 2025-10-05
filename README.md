@@ -1,11 +1,17 @@
 ## Radiomic Deep Brain Stimulation Prediction<br><sup>with Quantitative Susceptibility Mapping (RadDBS-QSM)</sup>
-Repository for 
+This repository hosts the following works
 >_Technical Feasibility of Quantitative Susceptibility Mapping Radiomics for Predicting
 Deep Brain Stimulation Outcomes in Parkinson’s Disease_
 >[published](https://pubmed.ncbi.nlm.nih.gov/40965145/)  in [Neurosurgery](https://journals.lww.com/neurosurgery/pages/default.aspx) 
 >
 >_Radiomic Prediction of Parkinson’s Disease Deep Brain Stimulation Surgery Outcomes using Quantitative Susceptibility Mapping and Label Noise Compensation_ 
 >[published](https://www.brainstimjrnl.com/article/S1935-861X(25)00166-4/fulltext) in [Brain Stimulation](https://www.brainstimjrnl.com/)
+
+
+## Contents
+Demonstration code can be found in [`main.ipynb`](https://github.com/agr78/RadDBS-QSM/blob/main/src/jupyter/main.ipynb) <br/>
+Radiomic features can be found in [`npy`](https://github.com/agr78/RadDBS-QSM/tree/main/data/npy/rp) <br/>
+Customizable extraction code is located in [`extract.py`](https://github.com/agr78/RadDBS-QSM/blob/main/src/jupyter/extract.py) <br/>
 
 
 ## Summary
@@ -24,12 +30,6 @@ This work presents a framework to: <br/>
 * Extract radiomic features for input into a regression model to predict post-surgical motor improvement. <br/>
 * Incorporate clinical variables such as age, sex, etc.
 * Provide a novel label noise compensation technique improving outcome prediction. <br/>
-
-
-## Contents
-Demonstration code can be found in [`main.ipynb`](https://github.com/agr78/RadDBS-QSM/blob/main/src/jupyter/main.ipynb) <br/>
-Radiomic features can be found in [`npy`](https://github.com/agr78/RadDBS-QSM/tree/main/data/npy/rp) <br/>
-Customizable extraction code is located in [`extract.py`](https://github.com/agr78/RadDBS-QSM/blob/main/src/jupyter/extract.py) <br/>
 
 
 ## Installation
