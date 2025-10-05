@@ -9,3 +9,8 @@ src/jupyter/pickles/
 src/jupyter/old/
 src/jupyter/phi/
 src/jupyter/npy/
+src/jupyter/imp/
+src/jupyter/validation/
+src/jupyter/html/
+src/jupyter/txt/
+src/jupyter/util/
