@@ -81,6 +81,7 @@ def feature_matrix(raddbs_path,segs,qsms,subsc,reextract):
         K = np.load(Path(raddbs_path+'/data/npy/rp/K_chh_rp.npy'))
         R = np.load(Path(raddbs_path+'/data/npy/rp/R_chh_rp.npy'))
         n_rois = R.shape[0]-1
+        n_cases = 37
         with open(Path(raddbs_path+'/data/npy/rp/Phi_mcl_gt_roi_chh_rp'), "rb") as fp:  
             Phi_gt = pickle.load(fp)
         
