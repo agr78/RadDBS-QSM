@@ -29,9 +29,9 @@ A radiomic model based on presurgical quantitative susceptibility maps (QSM) is 
 
 
 ## Contents
-Demonstration code can be found in `main.ipynb` <br/>
-Radiomic [features](https://huggingface.co/datasets/agr78/PRLx-GAN-synthetic-rim) can be found in [`npy`](https://github.com/agr78/PRLx-GAN/tree/main/png) <br/>
-Customizable [extraction code](https://huggingface.co/agr78/PRLx-GAN) is located in [`extract.py`](https://github.com/agr78/PRLx-GAN/tree/main/net) <br/>
+Demonstration code can be found in [`main.ipynb`](https://github.com/agr78/RadDBS-QSM/blob/main/src/jupyter/main.ipynb) <br/>
+Radiomic features can be found in [`npy`](https://github.com/agr78/RadDBS-QSM/tree/main/data/npy/rp) <br/>
+Customizable extraction code is located in [`extract.py`](https://github.com/agr78/RadDBS-QSM/blob/main/src/jupyter/extract.py) <br/>
 
 
 ## Installation
