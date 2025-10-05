@@ -1,4 +1,16 @@
 archive/
+src/csv
+src/elastic_net
+src/env
+src/features
+src/figs
+src/lasso
+src/logs
+src/ridge
+src/rvae/
+src/sdv
+src/torchgel
+src/util
 src/jupyter/validation/
 src/jupyter/pickles/
 src/jupyter/old/
