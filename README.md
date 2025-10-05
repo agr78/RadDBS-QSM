@@ -65,8 +65,6 @@ jupyter notebook main.ipynb
 If this code is used, please cite the following:
 > [Neurosurgery Article](https://doi.org/10.1227/neu.0000000000003721): A. G. Roberts et al., "Technical Feasibility of Quantitative Susceptibility Mapping Radiomics for Predicting Deep Brain Stimulation Outcomes in Parkinson’s Disease, 2025, DOI: 10.1227/neu.0000000000003721
 > 
-> [Preprint](https://doi.org/10.1101/2024.12.26.24319663): A. G. Roberts et al., "Quantitative Susceptibility Mapping Radiomics with Label Noise Compensation for Predicting Deep Brain Stimulation Outcomes in Parkinson’s Disease". medRxiv pre-print server, 2024-12-26, medRxiv:24319663 
->
 
 ## BibTex
 
