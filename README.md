@@ -45,16 +45,14 @@ Run the setup script
 ```
 source ./src/install.sh
 ```
-Wait...then open the Jupyter notebook and select the `RadDBS-QSMenv` environment
+Wait...then open the Jupyter notebook in the `RadDBS-QSMenv` environment
 ```
-jupyter notebook main.ipynb
+jupyter notebook ./src/jupyter/main.ipynb
 ```
 
 ## Notes
-* This tool was developed for use with [QSM](https://mriquestions.com/quantitative-susceptibility.html), but other contrasts may be explored.
-
+* This tool was developed for use with [QSM](https://mriquestions.com/quantitative-susceptibility.html), but can be used with other contrasts.
 * If the QSM has not been reconstructed, [this repository](https://github.com/agr78/mSMV?tab=readme-ov-file#summary) provides code to obtain the whole brain susceptibility.
-
 * If manual region-of-interest masks are not available, [this repository](https://github.com/agr78/mSMV/blob/atlas/README.md) provides bash scripts to create a sample atlas and register individual cases.
 
 
