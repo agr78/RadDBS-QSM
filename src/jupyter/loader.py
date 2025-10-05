@@ -65,22 +65,29 @@ def s1data(raddbs_path,nii_dir,verbose):
 
 def s1cvdata(df,segs,raddbs_path,nii_dir,verbose):
     # Patient IDs
-    n_cases = len(segs)
-    subject_id = np.asarray(df[df.columns[0]])[1:]
-    s_directory = Path(raddbs_path+nii_dir+'seg')
-    s_directory = os.listdir(s_directory)
-    s_directory = sorted(s_directory)
+    try:
+        n_cases = len(segs)
+        subject_id = np.asarray(df[df.columns[0]])[1:]
+        s_directory = Path(raddbs_path+nii_dir+'seg')
+        s_directory = os.listdir(s_directory)
+        s_directory = sorted(s_directory)
 
-    # Only extract ROI if it is present in all cases
-    seg_labels_all = segs[0]
-    case_number = np.zeros_like(np.asarray(s_directory))
-    for i in range(n_cases):
-        case_number[i] = float(s_directory[i][:2])
-    subject_id_corr = subject_id[np.in1d(subject_id,case_number)]
-    age = np.nan_to_num(np.asarray(df[df.columns[-4]])[1:][np.in1d(subject_id,case_number)].astype(float))
-    sex = np.nan_to_num(np.asarray(df[df.columns[-3]])[1:][np.in1d(subject_id,case_number)].astype(float))
-    dd = np.nan_to_num(np.asarray(df[df.columns[-2]])[1:][np.in1d(subject_id,case_number)].astype(float))
-    ledd = np.nan_to_num(np.asarray(df[df.columns[-1]])[1:][np.in1d(subject_id,case_number)].astype(float))
+        # Only extract ROI if it is present in all cases
+        seg_labels_all = segs[0]
+        case_number = np.zeros_like(np.asarray(s_directory))
+        for i in range(n_cases):
+            case_number[i] = float(s_directory[i][:2])
+        subject_id_corr = subject_id[np.in1d(subject_id,case_number)]
+    except:
+        print('Missing segmentations, using sample case IDs')
+        subject_id_corr = np.asarray([1.,  2.,  3.,  4.,  5.,  6.,  7.,  8.,  9., 10., 11., 13., 14.,
+       16., 18., 19., 20., 21., 22., 23., 24., 25., 26., 27., 28., 29.,
+       30., 31., 32., 33., 34., 35., 36., 37., 38., 39., 40.])
+        subject_id_corr_mask = np.in1d(subject_id,subject_id_corr)
+    age = np.nan_to_num(np.asarray(df[df.columns[-4]])[1:][subject_id_corr_mask].astype(float))
+    sex = np.nan_to_num(np.asarray(df[df.columns[-3]])[1:][subject_id_corr_mask].astype(float))
+    dd = np.nan_to_num(np.asarray(df[df.columns[-2]])[1:][subject_id_corr_mask].astype(float))
+    ledd = np.nan_to_num(np.asarray(df[df.columns[-1]])[1:][subject_id_corr_mask].astype(float))
 
     if verbose is True:
         for i in np.arange(n_cases):
@@ -90,9 +97,9 @@ def s1cvdata(df,segs,raddbs_path,nii_dir,verbose):
                 case_list = open('/home/ali/RadDBS-QSM/src/jupyter/pickles/cases_'+suffix,'r')
                 print('Case',subject_id[i],'quarantined')
 
-    pre_updrs_off =  np.asarray(df[df.columns[3]][np.hstack((False,np.in1d(subject_id,subject_id_corr)))])                                
-    pre_updrs_on =  np.asarray(df[df.columns[4]][np.hstack((False,np.in1d(subject_id,subject_id_corr)))])
-    post_updrs_off =  np.asarray(df[df.columns[6]][np.hstack((False,np.in1d(subject_id,subject_id_corr)))])
+    pre_updrs_off =  np.asarray(df[df.columns[3]][np.hstack((False,subject_id_corr_mask))])                                
+    pre_updrs_on =  np.asarray(df[df.columns[4]][np.hstack((False,subject_id_corr_mask))])
+    post_updrs_off =  np.asarray(df[df.columns[6]][np.hstack((False,subject_id_corr_mask))])
 
     per_change = (np.asarray(pre_updrs_off).astype(float)-np.asarray(post_updrs_off).astype(float))/(np.asarray(pre_updrs_off).astype(float))
     lct_change = (np.asarray(pre_updrs_off).astype(float)-(np.asarray(pre_updrs_on)).astype(float))/(np.asarray(pre_updrs_off).astype(float))
