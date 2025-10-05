@@ -77,7 +77,8 @@ def s1cvdata(df,segs,raddbs_path,nii_dir,verbose):
         case_number = np.zeros_like(np.asarray(s_directory))
         for i in range(n_cases):
             case_number[i] = float(s_directory[i][:2])
-        subject_id_corr = subject_id[np.in1d(subject_id,case_number)]
+        subject_id_corr_mask = np.in1d(subject_id,case_number)
+        subject_id_corr = subject_id[subject_id_corr_mask]
     except:
         print('Missing segmentations, using sample case IDs')
         subject_id_corr = np.asarray([1.,  2.,  3.,  4.,  5.,  6.,  7.,  8.,  9., 10., 11., 13., 14.,
