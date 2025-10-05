@@ -43,7 +43,7 @@ cd RadDBS-QSM
 ```
 Run the setup script
 ```
-source ./src/install.sh
+source ./install.sh
 ```
 Wait...then open the Jupyter notebook in the `RadDBS-QSMenv` environment
 ```
