@@ -2,7 +2,7 @@
 Repository for 
 >_Technical Feasibility of Quantitative Susceptibility Mapping Radiomics for Predicting
 Deep Brain Stimulation Outcomes in Parkinson’s Disease_
->[published](https://openreview.net/forum?id=wFkiqB5spT&referrer=%5Bthe%20profile%20of%20Alexandra%20Grace%20Roberts%5D(%2Fprofile%3Fid%3D~Alexandra_Grace_Roberts1))  in [Neurosurgery](https://journals.lww.com/neurosurgery/pages/default.aspx) 
+>[published](https://pubmed.ncbi.nlm.nih.gov/40965145/)  in [Neurosurgery](https://journals.lww.com/neurosurgery/pages/default.aspx) 
 
 and
 
