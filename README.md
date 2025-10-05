@@ -22,25 +22,17 @@ A radiomic model based on presurgical quantitative susceptibility maps (QSM) is 
 
 <br/>
 
-[This work](https://huggingface.co/papers/2505.23353) presents a framework to: <br/>
+This work presents a framework to: <br/>
 * Extract radiomic features for input into a regression model to predict post-surgical motor improvement. <br/>
 * Incorporate clinical variables such as age, sex, etc.
 * Provide a novel label noise compensation technique improving outcome prediction. <br/>
 
 
 ## Contents
-Demonstration code can be found in `main.ipynb` <br/>
-Radiomic [features](https://huggingface.co/datasets/agr78/PRLx-GAN-synthetic-rim) can be found in [`npy`](https://github.com/agr78/PRLx-GAN/tree/main/png) <br/>
-Customizable [extraction code](https://huggingface.co/agr78/PRLx-GAN) is located in [`extract.py`](https://github.com/agr78/PRLx-GAN/tree/main/net) <br/>
-Subject feature maps such as the one below, are generated in `fm.ipynb`
+Demonstration code can be found in [`main.ipynb`](https://github.com/agr78/RadDBS-QSM/blob/main/src/jupyter/main.ipynb) <br/>
+Radiomic features can be found in [`npy`](https://github.com/agr78/RadDBS-QSM/tree/main/data/npy/rp) <br/>
+Customizable extraction code is located in [`extract.py`](https://github.com/agr78/RadDBS-QSM/blob/main/src/jupyter/extract.py) <br/>
 
-## Preliminaries
-To download the radiomic features, ensure [Git Large File Service](https://git-lfs.com/) is installed
-```
-sudo apt-get install git-lfs
-git lfs install
-```
-The `install.sh` script will skip feature extraction unless `\your\QSM\data` is replaced by a valid path
 
 ## Installation
 Clone the repository with
