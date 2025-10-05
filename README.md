@@ -1,4 +1,4 @@
-# RadDBS-QSM
+## Radiomic Deep Brain Stimulation Prediction<br><sup>with Quantitative Susceptibility Mapping (RadDBS-QSM)</sup>
 Repository for 
 >_Technical Feasibility of Quantitative Susceptibility Mapping Radiomics for Predicting
 Deep Brain Stimulation Outcomes in Parkinson’s Disease_
