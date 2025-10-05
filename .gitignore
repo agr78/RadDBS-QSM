@@ -14,3 +14,6 @@ src/jupyter/validation/
 src/jupyter/html/
 src/jupyter/txt/
 src/jupyter/util/
+src/figs/
+src/csv/
+src/env/
