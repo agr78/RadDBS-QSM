@@ -1,5 +1,8 @@
 archive
 src/util
+src/csv
+src/env
+src/figs
 src/ridge
 src/mlp
 src/lasso
