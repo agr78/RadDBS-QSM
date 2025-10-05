@@ -1,10 +1,10 @@
 ## Radiomic Deep Brain Stimulation Prediction<br><sup>with Quantitative Susceptibility Mapping (RadDBS-QSM)</sup>
 This repository hosts the following works
 >_Technical Feasibility of Quantitative Susceptibility Mapping Radiomics for Predicting
-Deep Brain Stimulation Outcomes in Parkinson’s Disease_
+Deep Brain Stimulation Outcomes in Parkinson’s Disease_<br>
 >[published](https://pubmed.ncbi.nlm.nih.gov/40965145/)  in [Neurosurgery](https://journals.lww.com/neurosurgery/pages/default.aspx) 
 >
->_Radiomic Prediction of Parkinson’s Disease Deep Brain Stimulation Surgery Outcomes using Quantitative Susceptibility Mapping and Label Noise Compensation_ 
+>_Radiomic Prediction of Parkinson’s Disease Deep Brain Stimulation Surgery Outcomes using Quantitative Susceptibility Mapping and Label Noise Compensation_<br> 
 >[published](https://www.brainstimjrnl.com/article/S1935-861X(25)00166-4/fulltext) in [Brain Stimulation](https://www.brainstimjrnl.com/)
 
 
