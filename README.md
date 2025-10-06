@@ -15,7 +15,7 @@ Customizable extraction code is located in [`extract.py`](https://github.com/agr
 
 
 ## Summary
-A radiomic model based on presurgical quantitative susceptibility maps (QSM) is used to predict patient outcomes to deep brain stimulation (DBS) surgery for the treatment of Parkinson's diease.
+A radiomic model based on presurgical quantitative susceptibility maps (QSM) is used to predict patient outcomes to deep brain stimulation (DBS) surgery for the treatment of Parkinson's disease.
 
 <br/>
 
