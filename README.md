@@ -7,7 +7,7 @@ Deep Brain Stimulation Outcomes in Parkinson’s Disease_<br>
 >_Radiomic Prediction of Parkinson’s Disease Deep Brain Stimulation Surgery Outcomes using Quantitative Susceptibility Mapping and Label Noise Compensation_<br> 
 >[published](https://www.brainstimjrnl.com/article/S1935-861X(25)00166-4/fulltext) in [Brain Stimulation](https://www.brainstimjrnl.com/)
 
-and [several conference proceedings](https://alexandragroberts.com/publications/#radiomic).
+and several [conference proceedings](https://alexandragroberts.com/publications/#radiomic).
 
 ## Contents
 Demonstration code can be found in [`main.ipynb`](https://github.com/agr78/RadDBS-QSM/blob/main/src/jupyter/main.ipynb) <br/>
