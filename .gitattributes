@@ -1,2 +1,4 @@
 # Auto detect text files and perform LF normalization
 * text=auto
+# Ignore notebooks in language statistics
+*.ipynb linguist-generated=true
