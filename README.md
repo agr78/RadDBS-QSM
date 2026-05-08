@@ -9,12 +9,6 @@ Deep Brain Stimulation Outcomes in Parkinson’s Disease_<br>
 
 and several [conference papers](https://alexandragroberts.com/publications/#radiomic).
 
-## Contents
-Demonstration code can be found in [`main.ipynb`](https://github.com/agr78/RadDBS-QSM/blob/main/src/jupyter/main.ipynb) <br/>
-Radiomic features can be found in [`npy`](https://github.com/agr78/RadDBS-QSM/tree/main/data/npy/rp) <br/>
-Customizable extraction code is located in [`extract.py`](https://github.com/agr78/RadDBS-QSM/blob/main/src/jupyter/extract.py) <br/>
-
-
 ## Summary
 A radiomic model based on presurgical quantitative susceptibility maps (QSM) is used to predict patient outcomes to deep brain stimulation (DBS) surgery for the treatment of Parkinson's disease.
 
@@ -32,6 +26,10 @@ This project presents a framework to: <br/>
 * Incorporate clinical variables such as age, sex, etc.
 * Provide a novel label noise compensation technique improving outcome prediction. <br/>
 
+## Contents
+Demonstration code can be found in [`main.ipynb`](https://github.com/agr78/RadDBS-QSM/blob/main/src/jupyter/main.ipynb) <br/>
+Radiomic features can be found in [`npy`](https://github.com/agr78/RadDBS-QSM/tree/main/data/npy/rp) <br/>
+Customizable extraction code is located in [`extract.py`](https://github.com/agr78/RadDBS-QSM/blob/main/src/jupyter/extract.py) <br/>
 
 ## Installation
 Clone the repository with
