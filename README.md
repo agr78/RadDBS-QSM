@@ -58,7 +58,7 @@ jupyter notebook ./src/jupyter/main.ipynb
 
 ## Publications
 If this code is used, please cite the following:
-> [Neurosurgery Article](https://doi.org/10.1227/neu.0000000000003721): A. G. Roberts et al., "Technical Feasibility of Quantitative Susceptibility Mapping Radiomics for Predicting Deep Brain Stimulation Outcomes in Parkinson’s Disease, 2025, DOI: 10.1227/neu.0000000000003721
+> [Neurosurgery Article](https://doi.org/10.1227/neu.0000000000003721): A. G. Roberts et al., "Technical Feasibility of Quantitative Susceptibility Mapping Radiomics for Predicting Deep Brain Stimulation Outcomes in Parkinson’s Disease", 2025, DOI: 10.1227/neu.0000000000003721
 > 
 
 ## BibTex
