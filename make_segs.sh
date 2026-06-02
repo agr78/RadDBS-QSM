@@ -1,6 +1,7 @@
 #! /bin/bash
 # Make QSM atlas and transform segmentation to patient space
 # QSMs can be reconstructed from complex gradient echo data with `main.m`
+# Prefixes, identifiers, and list paths can be updated
 # Alexandra G. Roberts
 # 10/07/2024
 # Cornell MRI Lab
@@ -62,7 +63,7 @@ while read -r line; do
     echo "Applying transform to $id"
     inv_trans=$(find ./ -name "magmag_$id""BrainExtractionBrain*InverseWarp.nii.gz" -type f)
     antsApplyTransforms \
-    -i "/media/mts_dbs/dbs/lateral/atlas/xtracted/seg.nii.gz" \
+    -i "seg.nii.gz" \
     -r "mag_"$id"BrainExtractionBrain.nii.gz" \
     -o "./labels/labels2qsm_$id.nii.gz" \
     -t [$line,1] \
